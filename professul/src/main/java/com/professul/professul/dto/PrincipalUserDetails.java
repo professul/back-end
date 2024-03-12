@@ -9,31 +9,32 @@ import java.util.Collection;
 
 public class PrincipalUserDetails implements UserDetails {
 
-    private final User userEntity;
+    private final User user;
 
-    public PrincipalUserDetails(User userEntity){
-        this.userEntity=userEntity;
+    public PrincipalUserDetails(User user) {
+        this.user = user;
     }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<GrantedAuthority> collection= new ArrayList<>();
-        collection.add(new GrantedAuthority() {
+        Collection<GrantedAuthority> collections = new ArrayList<>();
+        collections.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return userEntity.getRole();
+                return user.getRole();
             }
         });
-        return collection;
+        return collections;
     }
-
+//    public String getUserId(){return user.getUserId()+"";} //uesrId쓰는거
     @Override
     public String getPassword() {
-        return userEntity.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return userEntity.getEmail();
+        return user.getEmail();
     }
 
     @Override
@@ -56,3 +57,5 @@ public class PrincipalUserDetails implements UserDetails {
         return true;
     }
 }
+
+

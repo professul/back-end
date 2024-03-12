@@ -31,49 +31,57 @@ public class SecurityConfig {
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil) {
 
         this.authenticationConfiguration = authenticationConfiguration;
-        this.jwtUtil=jwtUtil;
+        this.jwtUtil = jwtUtil;
     }
+
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception{
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
+
     @Bean //암호화
-    public BCryptPasswordEncoder passwordEncode(){
+    public BCryptPasswordEncoder passwordEncode() {
         return new BCryptPasswordEncoder();
     }
-@Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-    http.cors((cors)->cors.configurationSource(new CorsConfigurationSource() {
-        @Override
-        public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-            CorsConfiguration configuration=new CorsConfiguration();
-            configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-            configuration.setAllowedMethods(Collections.singletonList("*"));
-            configuration.setAllowCredentials(true);
-            configuration.setAllowedHeaders(Collections.singletonList("*"));
-            configuration.setMaxAge(3600L);
 
-            configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.cors((cors) -> cors.configurationSource(new CorsConfigurationSource() {
+            @Override
+            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                configuration.setAllowedMethods(Collections.singletonList("*"));
+                configuration.setAllowCredentials(true);
+                configuration.setAllowCredentials(true);
+                configuration.setAllowedHeaders(Collections.singletonList("*"));
+                configuration.setMaxAge(3600L);
+
+                configuration.setExposedHeaders(Collections.singletonList("Authorization"));
 
 
+                return configuration;
+            }
+        }));
+        http.csrf(AbstractHttpConfigurer::disable); //csrf disable
 
-            return configuration;
-        }
-    }));
-    http.csrf(AbstractHttpConfigurer::disable); //csrf disable
-    http.formLogin(AbstractHttpConfigurer::disable); //form login disable
-    http.httpBasic(AbstractHttpConfigurer::disable); //http basic 인증 방식 disable
-    http.authorizeHttpRequests((auth) -> auth //경로별 인가 작업
-            .requestMatchers("/", "/login", "/join").permitAll()
-            .anyRequest().authenticated()
-    );
-    //필터 추가 LoginFilter()는 인자를 받음(AuhenticationManager()메소드에 authenticationConfiguration 객체를 넣어야 함) 따라서 등록 필요
-    http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
-    http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
+        http.formLogin(AbstractHttpConfigurer::disable); //form login disable
+
+        http.httpBasic(AbstractHttpConfigurer::disable); //http basic 인증 방식 disable
+
+        http.authorizeHttpRequests((auth) -> auth //경로별 인가 작업
+                .requestMatchers("/", "/login", "/join").permitAll()
+                .requestMatchers("reissue").permitAll()
+                .anyRequest().authenticated()
+
+        );
+        //필터 추가 LoginFilter()는 인자를 받음(AuhenticationManager()메소드에 authenticationConfiguration 객체를 넣어야 함) 따라서 등록 필요
+        http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
+        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
 //세션 설정
-    http.sessionManagement((session)-> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-return http.build();
-}
+        http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        return http.build();
+    }
 
 }
