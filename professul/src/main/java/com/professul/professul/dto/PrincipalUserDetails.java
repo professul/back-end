@@ -21,7 +21,7 @@ public class PrincipalUserDetails implements UserDetails {
         collections.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return user.getRole();
+                return user.getRole().name();
             }
         });
         return collections;

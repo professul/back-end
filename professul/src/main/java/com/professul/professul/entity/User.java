@@ -1,5 +1,6 @@
 package com.professul.professul.entity;
 
+import com.professul.professul.util.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,12 +16,11 @@ public class User {
     @Column
     private String email;
     @Column
+    private String name;
+    @Column
     private String password;
     @Column
-    private String role;
-
-
-
-
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
 }

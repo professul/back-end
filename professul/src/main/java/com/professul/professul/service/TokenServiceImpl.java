@@ -1,6 +1,8 @@
 package com.professul.professul.service;
 
+import com.professul.professul.entity.RefreshEntity;
 import com.professul.professul.jwt.JWTUtil;
+import com.professul.professul.repository.RefreshRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,13 +11,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 @Service
 public class TokenServiceImpl implements TokenService {
 
     private final JWTUtil jwtUtil;
 
-    public TokenServiceImpl(JWTUtil jwtUtil) {
+    private final RefreshRepository refreshRepository;
+
+    public TokenServiceImpl(JWTUtil jwtUtil, RefreshRepository refreshRepository) {
         this.jwtUtil = jwtUtil;
+        this.refreshRepository=refreshRepository;
     }
 
     @Override
@@ -54,16 +61,32 @@ public class TokenServiceImpl implements TokenService {
             //response status code
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
-//        String userId=jwtUtil.getUserId(refresh);
-        String username = jwtUtil.getEmail(refresh);
+
+        //DB에 저장되어 있는지 확인
+        Boolean isExist = refreshRepository.existsByRefresh(refresh);
+        if (!isExist) {
+
+            //response body
+            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+        }
+
+        String email = jwtUtil.getEmail(refresh);
         String role = jwtUtil.getRole(refresh);
 
         //make new JWT
-        String newAccess = jwtUtil.createJwt("access", username, role, 600000L);
-        String newRefresh=jwtUtil.createJwt("refresh", username,role,86400000L); //24시간
+        String newAccess = jwtUtil.createJwt("access", email, role, 600000L);
+        String newRefresh=jwtUtil.createJwt("refresh", email,role,86400000L); //24시간
+
+        //Refresh 토큰 저장 DB에 기존의 Refresh 토큰 삭제 후 새 Refresh 토큰 저장
+        refreshRepository.deleteByRefresh(refresh);
+        addRefreshEntity(email, newRefresh, 86400000L);
+
+
+
         //response
         response.setHeader("access", newAccess);
         response.addCookie(createCookie("refresh", newRefresh));
+
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -76,9 +99,17 @@ public class TokenServiceImpl implements TokenService {
 
         return cookie;
     }
+
+    private void addRefreshEntity(String email, String refresh, Long expiredMs){
+        Date date= new Date(System.currentTimeMillis()+expiredMs);
+
+        RefreshEntity refreshEntity= new RefreshEntity();
+        refreshEntity.setEmail(email);
+        refreshEntity.setRefresh(refresh);
+        refreshEntity.setExpiration(date.toString());
+
+        refreshRepository.save(refreshEntity);
+    }
 }
 
 
-//eyJhbGciOiJIUzI1NiJ9.eyJjYXRlZ29yeSI6InJlZnJlc2giLCJlbWFpbCI6ImFkbWluIiwicm9sZSI6IlJPTEVfQURNSU4iLCJpYXQiOjE3MTAyMTYyNjEsImV4cCI6MTcxMDMwMjY2MX0.3q7LExCESl7J9o6Dt4UFfvJzQej0bs2u6u_OBiyY4js
-
-//eyJhbGciOiJIUzI1NiJ9.eyJjYXRlZ29yeSI6InJlZnJlc2giLCJlbWFpbCI6ImFkbWluIiwicm9sZSI6IlJPTEVfQURNSU4iLCJpYXQiOjE3MTAyMTYyNzcsImV4cCI6MTcxMDMwMjY3N30.GjQWiIbVGA5wkbK4jo0LUsKuVcHiDCqBHIj-_jxRt6s
