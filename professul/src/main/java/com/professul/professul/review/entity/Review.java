@@ -1,13 +1,16 @@
 package com.professul.professul.review.entity;
 
+import com.professul.professul.review.dto.ReviewDTO;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
 @Table(name = "review")
-@Data
+@Getter
 @DynamicInsert // null 값은 insert 쿼리에 포함되지 않게 세팅
+@DynamicUpdate
 public class Review {
     @Id
     @Column(name = "review_id")
@@ -40,4 +43,17 @@ public class Review {
 
     @Column(name = "status")
     private String status;
+
+    public void setReviewDTO(ReviewDTO rDTO) {
+        this.reviewId = rDTO.getReviewId();
+        this.userId = rDTO.getUserId();
+        this.profId = rDTO.getProfId();
+        this.classLevel = rDTO.getClassLevel();
+        this.groupProject = rDTO.getGroupProject();
+        this.classPlan = rDTO.getClassPlan();
+        this.classRate = rDTO.getClassRate();
+        this.profRate = rDTO.getProfRate();
+        this.review = rDTO.getReview();
+        this.status = rDTO.getStatus();
+    }
 }

@@ -1,5 +1,6 @@
 package com.professul.professul.review.controller;
 
+import com.professul.professul.review.dto.ProfessorDTO;
 import com.professul.professul.review.dto.ReviewDTO;
 import com.professul.professul.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -21,19 +22,28 @@ public class ReviewController {
     @PostMapping("/rating")
     public ResponseEntity<String> registRating() throws Exception {
         log.debug("C: rating() 호출");
+
+        ProfessorDTO pDTO = new ProfessorDTO();
         ReviewDTO rDTO = new ReviewDTO();
 
         try {
+            // 교수 정보
+            pDTO.setProfId(5);
+            pDTO.setUnivId(1);
+            pDTO.setDeptId(13);
+            pDTO.setProfName("김연수");
+
+            // 리뷰 정보
             rDTO.setUserId(1);
-            rDTO.setProfId(3);
+            rDTO.setProfId(5);
             rDTO.setClassLevel(5);
             rDTO.setGroupProject(4);
             rDTO.setClassPlan("일치");
             rDTO.setClassRate(3);
-            rDTO.setProfRate(5);
+            rDTO.setProfRate(4);
             rDTO.setReview("좋아요");
 
-            rService.registRating(rDTO);
+            rService.registRating(pDTO, rDTO);
 
             return new ResponseEntity<>("ok", HttpStatus.OK);
         } catch (Exception e) {
