@@ -7,6 +7,7 @@ import com.professul.professul.util.UserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -20,6 +21,8 @@ public class JoinServiceImpl implements JoinService {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
+
+    @Transactional
     @Override
     public void joinProcess(JoinDTO joinDTO) throws Exception { //회원가입
         String email = joinDTO.getEmail();
@@ -27,7 +30,7 @@ public class JoinServiceImpl implements JoinService {
 
         log.info("회원가입 요청 - 이메일: {}, 이름: {}", email, name);
 
-
+        //이메일 중복검사
         Boolean isExist = userRepository.existsByEmail(email);
 
         if (isExist) {
@@ -46,7 +49,7 @@ public class JoinServiceImpl implements JoinService {
         data.setEmail(email);
         data.setName(name);
         data.setPassword(encryptedPassword);
-        data.setRole(UserRole.ADMIN_ROLE);
+        data.setRole(UserRole.ROLE_ADMIN);
 
         userRepository.save(data);
 

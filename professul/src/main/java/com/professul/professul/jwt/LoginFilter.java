@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.professul.professul.dto.LoginDTO;
 import com.professul.professul.dto.PrincipalUserDetails;
 import com.professul.professul.entity.RefreshEntity;
+import com.professul.professul.entity.User;
 import com.professul.professul.repository.RefreshRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletInputStream;
@@ -22,9 +23,7 @@ import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.*;
 
 @Slf4j
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -65,18 +64,22 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //spring security에서 username과 password를 검증하기 위해서는 token에 담아야 함
         assert loginDTO != null;
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword(), null);
+        Authentication authentication=authenticationManager.authenticate(authToken);
+        PrincipalUserDetails principalUserDetails=(PrincipalUserDetails)authentication.getPrincipal();
+        User user=principalUserDetails.getUser();
+
         //token에 담은 검증을 위한 AuthenticationManager로 전달
         return authenticationManager.authenticate(authToken);
     }
 
     //로그인 성공시 실행하는 메소드 (여기서 JWT를 발급하면 됨)
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
-        //유저 정보
-        PrincipalUserDetails userDetails = (PrincipalUserDetails) authentication.getPrincipal();
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
+        //유저 정보 가져오기
+        PrincipalUserDetails principalUserDetails = (PrincipalUserDetails) authentication.getPrincipal();
+        User user= principalUserDetails.getUser();
 
         String email = authentication.getName();
-
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
@@ -91,22 +94,26 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         addRefresh(email, refresh, 86400000L);
         //응답 설정
         response.setHeader("access", access);
+        log.info("access",access);
         response.addCookie(createCookie("refresh", refresh));
+        log.info(refresh);
         response.setStatus(HttpStatus.OK.value());
+        response.addHeader("Access-Control-Expose-Headers", "access");
+
 
         log.info("로그인 성공 - 사용자: {}, 역할: {}", email, role);
-//        PrincipalUserDetails principalUserDetails= (PrincipalUserDetails)authentication.getPrincipal();
-//        String email= principalUserDetails.getUsername();
-//
-//        Collection<? extends GrantedAuthority> authorities=authentication.getAuthorities();
-//        Iterator<? extends GrantedAuthority> iterator=authorities.iterator();
-//        GrantedAuthority auth=iterator.next();
-//
-//        String role=auth.getAuthority();
-//
-//        String token= jwtUtil.createJwt(email,role,60*60*10L);
-//        //Http 인증 방식은 RFC 7235 정의에 따라 이런 인증 헤더 형태를 가져야 한다
-//        response.addHeader("Authorization", "Bearer " + token);
+
+        // 사용자 정보를 JSON 형식으로 변환하여 응답 본문에 작성
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userJson = objectMapper.writeValueAsString(user);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(userJson);
+
+
+        log.info(userJson);
+
+
 
     }
 

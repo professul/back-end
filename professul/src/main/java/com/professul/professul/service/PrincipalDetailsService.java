@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 
-@Service
+@Service //principalUserDetails에 account를 넣어주는 서비스
 public class PrincipalDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
