@@ -2,6 +2,7 @@ package com.professul.professul.service;
 
 import com.professul.professul.dto.JoinDTO;
 import com.professul.professul.entity.User;
+import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.repository.UserRepository;
 import com.professul.professul.util.UserRole;
 import lombok.extern.slf4j.Slf4j;
@@ -11,12 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-public class JoinServiceImpl implements JoinService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public JoinServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
@@ -35,7 +36,7 @@ public class JoinServiceImpl implements JoinService {
 
         if (isExist) {
             log.info("중복된 이메일입니다. 이메일: {}", email);
-            throw new Exception("중복된 이메일입니다");
+            throw new EmailAlreadyExistsException("중복된 이메일입니다.");
         }
 
         String password = joinDTO.getPassword();
@@ -49,7 +50,7 @@ public class JoinServiceImpl implements JoinService {
         data.setEmail(email);
         data.setName(name);
         data.setPassword(encryptedPassword);
-        data.setRole(UserRole.ROLE_ADMIN);
+        data.setRole(UserRole.ROLE_USER);
 
         userRepository.save(data);
 

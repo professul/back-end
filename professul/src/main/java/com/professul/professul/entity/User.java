@@ -21,6 +21,6 @@ public class User {
     private String password;
     @Column
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    private UserRole role=UserRole.ROLE_USER;
 
 }

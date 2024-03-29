@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,7 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-
+@Slf4j
 public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 이 메소드 통과
     private final JWTUtil jwtUtil;
 
@@ -26,7 +27,9 @@ public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 �
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 헤더에서 access키에 담긴 토큰을 꺼냄
+        log.info("여기통과");
         String accessToken = request.getHeader("access");
+        log.debug("Extracted Access Token: {}", accessToken);
 
 // 토큰이 없다면 다음 필터로 넘김
         if (accessToken == null) {
@@ -40,6 +43,8 @@ public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 �
         try {
             jwtUtil.isExpired(accessToken);
         } catch (ExpiredJwtException e) {
+            log.warn("Access Token Expired: {}", e.getMessage());
+            log.info("토큰만료");
 
             //response body
             PrintWriter writer = response.getWriter();
@@ -54,6 +59,7 @@ public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 �
         String category = jwtUtil.getCategory(accessToken);
 
         if (!category.equals("access")) {
+            log.warn("Invalid Access Token Category: {}", category);
 
             //response body
             PrintWriter writer = response.getWriter();
@@ -75,6 +81,7 @@ public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 �
 
         Authentication authToken = new UsernamePasswordAuthenticationToken(principalUserDetails, null, principalUserDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        log.debug("Authentication set for user: {}", email);
 
         filterChain.doFilter(request, response);
 

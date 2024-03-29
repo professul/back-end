@@ -2,7 +2,7 @@ package com.professul.professul.service;
 
 import com.professul.professul.dto.JoinDTO;
 
-public interface JoinService {
+public interface UserService {
 
     void joinProcess(JoinDTO joinDTO) throws Exception;
 
