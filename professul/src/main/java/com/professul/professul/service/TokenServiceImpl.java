@@ -29,7 +29,6 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public ResponseEntity<?> reissueToken(HttpServletRequest request, HttpServletResponse response) {
         log.info("토큰 재발급 요청 시작");
-        //get refresh token
         String refresh = null;
         Cookie[] cookies = request.getCookies();
 
