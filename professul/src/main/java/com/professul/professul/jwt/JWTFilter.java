@@ -26,9 +26,15 @@ public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 �
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
         // 헤더에서 access키에 담긴 토큰을 꺼냄
         log.info("여기통과");
-        String accessToken = request.getHeader("access");
+//        String accessToken = request.getHeader("access");
+        String authorizationHeader = request.getHeader("access");
+
+// 값의 형식 => "Bearer {token}"
+        String accessToken = authorizationHeader.substring(7);
+//이렇게 Authorization 헤더에서 값을 가져온 뒤, 접두사인 "Bearer "를 제거하고 순수 토큰 값만 사용
         log.debug("Extracted Access Token: {}", accessToken);
 
 // 토큰이 없다면 다음 필터로 넘김

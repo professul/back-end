@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-public class PrincipalUserDetails implements UserDetails {
+public class PrincipalUserDetails  implements UserDetails {
 
     private final User user;
 //    private final Map<String,Object> attribute;
@@ -23,7 +23,6 @@ public class PrincipalUserDetails implements UserDetails {
         collections.add((GrantedAuthority) () -> user.getRole().name());
         return collections;
     }
-//    public String getUserId(){return user.getUserId()+"";} //uesrId쓰는거
     @Override
     public String getPassword() {
         return user.getPassword();

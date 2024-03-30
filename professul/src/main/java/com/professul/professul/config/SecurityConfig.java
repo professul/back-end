@@ -84,10 +84,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests((auth) -> auth //경로별 인가 작업
                 .requestMatchers("/user/**").authenticated()
 
-//                .requestMatchers("/", "/login", "/join", "/reissue").permitAll()
+                .requestMatchers("/", "/login", "/join", "/reissue").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-//                .anyRequest().authenticated()
-                        .anyRequest().permitAll()
+                .anyRequest().authenticated()
         );
         //필터 추가 LoginFilter()는 인자를 받음(AuhenticationManager()메소드에 authenticationConfiguration 객체를 넣어야 함) 따라서 등록 필요
         http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);

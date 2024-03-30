@@ -18,12 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Arrays;
 import java.util.List;
 
-//    @GetMapping("/admin")
-//    @PreAuthorize("hasRole('ADMIN')") // 2. 메서드 단위 보안 설정
-//    public String adminPage(PrincipalUserDetails principal) {
-//
-//        return "Admin Page";
-//    }
+
 @RestController
 public class AdminController {
 
