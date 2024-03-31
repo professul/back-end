@@ -19,7 +19,7 @@ public class QProfessor extends EntityPathBase<Professor> {
 
     public static final QProfessor professor = new QProfessor("professor");
 
-    public final NumberPath<Integer> deptId = createNumber("deptId", Integer.class);
+    public final StringPath deptName = createString("deptName");
 
     public final NumberPath<Integer> profId = createNumber("profId", Integer.class);
 
@@ -27,7 +27,7 @@ public class QProfessor extends EntityPathBase<Professor> {
 
     public final NumberPath<Double> rating = createNumber("rating", Double.class);
 
-    public final NumberPath<Integer> univId = createNumber("univId", Integer.class);
+    public final StringPath univName = createString("univName");
 
     public QProfessor(String variable) {
         super(Professor.class, forVariable(variable));

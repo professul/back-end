@@ -2,7 +2,9 @@ package com.professul.professul.review.entity;
 
 import com.professul.professul.review.dto.ReviewDTO;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -11,6 +13,7 @@ import org.hibernate.annotations.DynamicUpdate;
 @Getter
 @DynamicInsert // null 값은 insert 쿼리에 포함되지 않게 세팅
 @DynamicUpdate
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Review {
     @Id
     @Column(name = "review_id")
@@ -44,16 +47,31 @@ public class Review {
     @Column(name = "status")
     private String status;
 
-    public void setReviewDTO(ReviewDTO rDTO) {
-        this.reviewId = rDTO.getReviewId();
-        this.userId = rDTO.getUserId();
-        this.profId = rDTO.getProfId();
-        this.classLevel = rDTO.getClassLevel();
-        this.groupProject = rDTO.getGroupProject();
-        this.classPlan = rDTO.getClassPlan();
-        this.classRate = rDTO.getClassRate();
-        this.profRate = rDTO.getProfRate();
-        this.review = rDTO.getReview();
-        this.status = rDTO.getStatus();
+    public Review(int reviewId, int userId, int profId, int classLevel, int groupProject, String classPlan, int classRate, int profRate, String review, String status) {
+        this.reviewId = reviewId;
+        this.userId = userId;
+        this.profId = profId;
+        this.classLevel = classLevel;
+        this.groupProject = groupProject;
+        this.classPlan = classPlan;
+        this.classRate = classRate;
+        this.profRate = profRate;
+        this.review = review;
+        this.status = status;
+    }
+
+    public ReviewDTO toReviewDTO() {
+        return ReviewDTO.builder()
+                .reviewId(reviewId)
+                .userId(userId)
+                .profId(profId)
+                .classLevel(classLevel)
+                .groupProject(groupProject)
+                .classPlan(classPlan)
+                .classRate(classRate)
+                .profRate(profRate)
+                .review(review)
+                .status(status)
+                .build();
     }
 }
