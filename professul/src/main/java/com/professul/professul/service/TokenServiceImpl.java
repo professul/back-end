@@ -99,7 +99,7 @@ public class TokenServiceImpl implements TokenService {
         //make new JWT
         String newAccess = jwtUtil.createJwt("access", email, role, 600000L); //10분
         String newRefresh=jwtUtil.createJwt("refresh", email,role,86400000L); //24시간
-        log.info("새 접근 토큰: {}", newAccess);
+        log.info("새 엑세스 토큰: {}", newAccess);
         log.info("새 리프레시 토큰: {}", newRefresh);
 
         //Refresh 토큰 저장 DB에 기존의 Refresh 토큰 삭제 후 새 Refresh 토큰 저장
@@ -112,6 +112,7 @@ public class TokenServiceImpl implements TokenService {
 
         //response
         response.setHeader("access", newAccess);
+        response.addHeader("Access-Control-Expose-Headers", "access");
         response.addCookie(createCookie("refresh", newRefresh));
         log.info("토큰 재발급 완료");
 
@@ -122,7 +123,8 @@ public class TokenServiceImpl implements TokenService {
         Cookie cookie=new Cookie(key,value);
         cookie.setMaxAge(24*60*60); //24시간
 //        cookie.setSecure(true);
-//        cookie.setPath("/");
+        cookie.setSecure(false);
+        cookie.setPath("/");
         cookie.setHttpOnly(true);
 
         return cookie;
