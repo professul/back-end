@@ -87,15 +87,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         //토큰 생성
-        String access = jwtUtil.createJwt("access", email, role, 600000L);
-//        String access = jwtUtil.createJwt("access", email, role, 60000L); //임시로
+//        String access = jwtUtil.createJwt("access", email, role, 600000L);
+        String access = jwtUtil.createJwt("access", email, role, 60000L); //임시로
 
         String refresh = jwtUtil.createJwt("refresh", email, role, 86400000L);
 //        String refresh = jwtUtil.createJwt("refresh", email, role, 90000L);
 
         //Refresh 토큰 DB 저장
         addRefresh(email, refresh, 86400000L);
-//        addRefresh(email, refresh, 90000L);
 
         //응답 설정
         response.setHeader("access", access);
@@ -107,7 +106,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpStatus.OK.value());
 
         response.addHeader("Access-Control-Expose-Headers", "access");
-
+        //클라이언트가 cross-origin 요청을 할때 access 헤더 읽을 수 있게 함
         log.info("로그인 성공 - 사용자: {}, 역할: {}", email, role);
 
         // 사용자 정보를 JSON 형식으로 변환하여 응답 본문에 작성

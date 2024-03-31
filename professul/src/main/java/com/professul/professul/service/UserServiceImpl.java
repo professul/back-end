@@ -1,6 +1,7 @@
 package com.professul.professul.service;
 
 import com.professul.professul.dto.JoinDTO;
+import com.professul.professul.dto.ModifyUserDto;
 import com.professul.professul.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.repository.UserRepository;
@@ -56,6 +57,13 @@ public class UserServiceImpl implements UserService {
 
         log.info("회원가입 완료 - 이메일: {}", email);
     }
+
+    @Override
+    public void modifyUser(ModifyUserDto modifyUserDto) throws Exception {
+
+    }
+
+
 
 
 }

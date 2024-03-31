@@ -1,11 +1,15 @@
 package com.professul.professul.controller;
 
 import com.professul.professul.dto.JoinDTO;
+import com.professul.professul.dto.ModifyUserDto;
+import com.professul.professul.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,5 +35,19 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버오류발생");
         }
     }
+
+    @PatchMapping("/user/modify")
+    @Transactional
+    public ResponseEntity<?>modifyUserInfo(@RequestBody ModifyUserDto modifyUserDto){
+//        User user=
+        try{
+            userService.modifyUser(modifyUserDto);
+            return null;
+        }catch(Exception e){
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
 }
