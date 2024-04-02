@@ -1,4 +1,4 @@
-package com.professul.professul.dto;
+package com.professul.professul.userDetails;
 
 import com.professul.professul.entity.User;
 import lombok.Getter;

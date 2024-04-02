@@ -1,6 +1,6 @@
-package com.professul.professul.service;
+package com.professul.professul.userDetails;
 
-import com.professul.professul.dto.PrincipalUserDetails;
+import com.professul.professul.userDetails.PrincipalUserDetails;
 import com.professul.professul.entity.User;
 import com.professul.professul.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +10,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 @Slf4j
 @Service //principalUserDetails에 account를 넣어주는 서비스
 public class PrincipalDetailsService implements UserDetailsService {
