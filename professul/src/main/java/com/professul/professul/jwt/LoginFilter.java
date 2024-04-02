@@ -2,7 +2,7 @@ package com.professul.professul.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.professul.professul.dto.LoginDTO;
-import com.professul.professul.dto.PrincipalUserDetails;
+import com.professul.professul.userDetails.PrincipalUserDetails;
 import com.professul.professul.entity.RefreshEntity;
 import com.professul.professul.entity.User;
 import com.professul.professul.repository.RefreshRepository;

@@ -1,6 +1,6 @@
 package com.professul.professul.jwt;
 
-import com.professul.professul.dto.PrincipalUserDetails;
+import com.professul.professul.userDetails.PrincipalUserDetails;
 import com.professul.professul.entity.User;
 import com.professul.professul.repository.UserRepository;
 import com.professul.professul.util.UserRole;

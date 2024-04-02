@@ -5,6 +5,7 @@ import com.professul.professul.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.service.UserService;
+import com.professul.professul.userDetails.PrincipalUserDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,15 +38,15 @@ public class UserController {
         }
     }
 
-    @PatchMapping ("/user/modify")
+    @PatchMapping("/user/modify")
     @Transactional
     public ResponseEntity<Object> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto) throws Exception {
-        Long userId= principalUserDetails.getUserId(); //유저아이디를 가져옴
-        try{
-        User modifiedUser= userService.modifyUser(userId, modifyUserDto);
-        ModifyUserResponseDto responseDto= new ModifyUserResponseDto(modifiedUser.getName());
-        return ResponseEntity.ok(responseDto);
-        }catch (UserModificationException e){
+        Long userId = principalUserDetails.getUserId(); //유저아이디를 가져옴
+        try {
+            User modifiedUser = userService.modifyUser(userId, modifyUserDto);
+            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(modifiedUser.getName());
+            return ResponseEntity.ok(responseDto);
+        } catch (UserModificationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
         }
 

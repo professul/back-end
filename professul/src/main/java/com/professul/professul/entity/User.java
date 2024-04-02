@@ -3,6 +3,7 @@ package com.professul.professul.entity;
 import com.professul.professul.util.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 @Entity
@@ -13,13 +14,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
-    @Column
+    @NonNull
+    @Column(unique = true)
     private String email;
-    @Column
+    @NonNull
     private String name;
-    @Column
+    @NonNull
     private String password;
-    @Column
     @Enumerated(EnumType.STRING)
     private UserRole role=UserRole.ROLE_USER;
 
