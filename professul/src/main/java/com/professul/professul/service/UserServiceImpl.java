@@ -1,12 +1,12 @@
 package com.professul.professul.service;
 
-import com.professul.professul.dto.JoinDTO;
-import com.professul.professul.dto.ModifyUserDto;
-import com.professul.professul.entity.User;
+import com.professul.professul.domain.user.dto.JoinDTO;
+import com.professul.professul.domain.user.dto.ModifyUserDto;
+import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
-import com.professul.professul.repository.UserRepository;
-import com.professul.professul.util.UserRole;
+import com.professul.professul.domain.user.repository.UserRepository;
+import com.professul.professul.domain.user.entity.UserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

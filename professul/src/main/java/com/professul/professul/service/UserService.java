@@ -1,8 +1,8 @@
 package com.professul.professul.service;
 
-import com.professul.professul.dto.JoinDTO;
-import com.professul.professul.dto.ModifyUserDto;
-import com.professul.professul.entity.User;
+import com.professul.professul.domain.user.dto.JoinDTO;
+import com.professul.professul.domain.user.dto.ModifyUserDto;
+import com.professul.professul.domain.user.entity.User;
 
 public interface UserService {
 
