@@ -1,14 +1,14 @@
 package com.professul.professul.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ModifyUserDto {
-
+@AllArgsConstructor
+public class ModifyUserResponseDto {
     private String name;
 
-    private String password;
 
 }

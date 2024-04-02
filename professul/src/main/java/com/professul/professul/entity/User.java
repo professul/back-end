@@ -23,4 +23,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role=UserRole.ROLE_USER;
 
+//    public User(String email, String name, String password, UserRole role) {
+//        this.email = email;
+//        this.name = name;
+//        this.password = password;
+//        this.role = role;
+//    }
+//
+//    protected User(){
+//
+//    }
+
 }

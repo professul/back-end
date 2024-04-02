@@ -5,6 +5,7 @@ import com.professul.professul.jwt.JWTFilter;
 import com.professul.professul.jwt.JWTUtil;
 import com.professul.professul.jwt.LoginFilter;
 import com.professul.professul.repository.RefreshRepository;
+import com.professul.professul.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,11 +31,14 @@ public class SecurityConfig {
 
     private final RefreshRepository refreshRepository;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,RefreshRepository refreshRepository) {
+    private final UserRepository userRepository;
+
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,RefreshRepository refreshRepository, UserRepository userRepository) {
 
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtUtil = jwtUtil;
         this.refreshRepository=refreshRepository;
+        this.userRepository=userRepository;
     }
 
     @Bean
@@ -75,7 +79,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
         );
         //필터 추가 LoginFilter()는 인자를 받음(AuhenticationManager()메소드에 authenticationConfiguration 객체를 넣어야 함) 따라서 등록 필요
-        http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
+        http.addFilterBefore(new JWTFilter(jwtUtil, userRepository), LoginFilter.class);
         http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class);
 //세션 설정

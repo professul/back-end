@@ -79,6 +79,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         PrincipalUserDetails principalUserDetails = (PrincipalUserDetails) authentication.getPrincipal();
         User user= principalUserDetails.getUser();
 
+        log.info(String.valueOf(user));
+        log.info(String.valueOf(user.getUserId()));
         String email = authentication.getName();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
