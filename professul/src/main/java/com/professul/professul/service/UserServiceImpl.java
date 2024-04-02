@@ -4,6 +4,7 @@ import com.professul.professul.dto.JoinDTO;
 import com.professul.professul.dto.ModifyUserDto;
 import com.professul.professul.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
+import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.repository.UserRepository;
 import com.professul.professul.util.UserRole;
 import lombok.extern.slf4j.Slf4j;
@@ -59,10 +60,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void modifyUser(ModifyUserDto modifyUserDto) throws Exception {
+    @Transactional
+    public User modifyUser(Long userId, ModifyUserDto modifyUserDto) throws UserModificationException {
+        User user= userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new UserModificationException("사용자를 찾을 수 없습니다.");
+        }
 
+        //이름 변경
+        if(modifyUserDto.getName()!=null && !modifyUserDto.getName().isEmpty()){
+            user.setName(modifyUserDto.getName());
+        }
+        //비밀번호 변경
+        if(modifyUserDto.getPassword()!=null && !modifyUserDto.getPassword().isEmpty()){
+            String encodedPassword= bCryptPasswordEncoder.encode(modifyUserDto.getPassword());
+            user.setPassword(encodedPassword);
+        }
+
+        return userRepository.save(user);
     }
-
 
 
 

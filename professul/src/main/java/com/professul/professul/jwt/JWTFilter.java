@@ -2,6 +2,7 @@ package com.professul.professul.jwt;
 
 import com.professul.professul.dto.PrincipalUserDetails;
 import com.professul.professul.entity.User;
+import com.professul.professul.repository.UserRepository;
 import com.professul.professul.util.UserRole;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -20,8 +21,11 @@ import java.io.PrintWriter;
 public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 이 메소드 통과
     private final JWTUtil jwtUtil;
 
-    public JWTFilter(JWTUtil jwtUtil) {
+    private final UserRepository userRepository;
+
+    public JWTFilter(JWTUtil jwtUtil, UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
+        this.userRepository=userRepository;
     }
 
     @Override
@@ -70,10 +74,9 @@ public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 �
 // username, role 값을 획득
         String email = jwtUtil.getEmail(accessToken);
         UserRole role= UserRole.valueOf(jwtUtil.getRole(accessToken));
+        User user=userRepository.findByEmail(email);
 
-        User user = new User();
-        user.setEmail(email);
-        user.setRole(role);
+
         PrincipalUserDetails principalUserDetails = new PrincipalUserDetails(user);
 
         Authentication authToken = new UsernamePasswordAuthenticationToken(principalUserDetails, null, principalUserDetails.getAuthorities());

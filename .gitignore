@@ -1,0 +1,11 @@
+/.idea/libraries/Gradle__org_projectlombok_lombok_1_18_30.xml
+
+
+## IntelliJ IDEA ###
+application.properties
+
+.idea
+*.iws
+*.iml
+*.ipr
+
