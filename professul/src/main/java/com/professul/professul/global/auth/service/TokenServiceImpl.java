@@ -1,6 +1,6 @@
 package com.professul.professul.global.auth.service;
 
-import com.professul.professul.entity.RefreshEntity;
+import com.professul.professul.global.auth.entity.RefreshEntity;
 import com.professul.professul.global.auth.jwt.JWTUtil;
 import com.professul.professul.global.auth.repository.RefreshRepository;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -49,8 +49,6 @@ public class TokenServiceImpl implements TokenService {
 
         if (refresh == null) {
             log.warn("리프레시 토큰이 null입니다.");
-
-            //response status code
             return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
         }
 

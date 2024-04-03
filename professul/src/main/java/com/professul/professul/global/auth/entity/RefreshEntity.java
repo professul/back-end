@@ -1,4 +1,4 @@
-package com.professul.professul.entity;
+package com.professul.professul.global.auth.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

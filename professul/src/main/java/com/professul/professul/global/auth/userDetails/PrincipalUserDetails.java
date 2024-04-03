@@ -19,17 +19,7 @@ public class PrincipalUserDetails  implements UserDetails {
     public PrincipalUserDetails(User user) {
 
         this.user = user;
-        log.info("PrincipalUserDetails 생성: {}", user);
 
-        if(user!=null ){
-            log.info("User userId: {}", user.getUserId());
-            log.info("User name: {}", user.getName());
-            log.info("User email:{}", user.getEmail());
-
-
-        }else {
-            log.info("User 객체가 null");
-        }
     }
 
     public String getUserName(){
