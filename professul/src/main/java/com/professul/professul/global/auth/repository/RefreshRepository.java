@@ -1,6 +1,6 @@
 package com.professul.professul.global.auth.repository;
 
-import com.professul.professul.entity.RefreshEntity;
+import com.professul.professul.global.auth.entity.RefreshEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 

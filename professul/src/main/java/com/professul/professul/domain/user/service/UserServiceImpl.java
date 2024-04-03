@@ -1,4 +1,4 @@
-package com.professul.professul.service;
+package com.professul.professul.domain.user.service;
 
 import com.professul.professul.domain.user.dto.JoinDTO;
 import com.professul.professul.domain.user.dto.ModifyUserDto;
@@ -80,6 +80,13 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    @Override
+    public Boolean checkPassword(Long userId, String password) {
+        User user= userRepository.findByUserId(userId);
+        String dbPassword=user.getPassword();
+        boolean match=bCryptPasswordEncoder.matches(password,dbPassword);
+        return match;
+    }
 
 
 }

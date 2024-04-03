@@ -3,7 +3,7 @@ package com.professul.professul.global.auth.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.professul.professul.global.auth.dto.LoginDTO;
 import com.professul.professul.global.auth.userDetails.PrincipalUserDetails;
-import com.professul.professul.entity.RefreshEntity;
+import com.professul.professul.global.auth.entity.RefreshEntity;
 import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.global.auth.repository.RefreshRepository;
 import jakarta.servlet.FilterChain;
@@ -90,8 +90,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         //토큰 생성
         String access = jwtUtil.createJwt("access", email, role, 600000L);
-//        String access = jwtUtil.createJwt("access", email, role, 60000L); //임시로
-
         String refresh = jwtUtil.createJwt("refresh", email, role, 86400000L);
 
         //Refresh 토큰 DB 저장
@@ -99,11 +97,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         //응답 설정
         response.setHeader("access", access);
-//        log.info("access",access);
-
         response.addCookie(createCookie("refresh", refresh));
-//        log.info(refresh);
-
         response.setStatus(HttpStatus.OK.value());
 
         response.addHeader("Access-Control-Expose-Headers", "access");

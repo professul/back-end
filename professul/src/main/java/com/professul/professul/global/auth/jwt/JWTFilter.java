@@ -56,7 +56,7 @@ public class JWTFilter extends OncePerRequestFilter { //모든 Http 요청이 �
             return;
         }
 
-// 토큰이 access인지 확인 (발급시 페이로드에 명시)
+        // 토큰이 access인지 확인 (발급시 페이로드에 명시)
         String category = jwtUtil.getCategory(accessToken);
 
         if (!category.equals("access")) {
