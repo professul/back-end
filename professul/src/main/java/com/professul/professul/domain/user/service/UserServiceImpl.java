@@ -2,6 +2,7 @@ package com.professul.professul.domain.user.service;
 
 import com.professul.professul.domain.user.dto.JoinDTO;
 import com.professul.professul.domain.user.dto.ModifyUserDto;
+import com.professul.professul.domain.user.entity.Status;
 import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
@@ -27,7 +28,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void joinProcess(JoinDTO joinDTO) throws Exception { //회원가입
+    public void joinProcess(JoinDTO joinDTO){ //회원가입
         String email = joinDTO.getEmail();
         String name = joinDTO.getName();
 
@@ -53,7 +54,7 @@ public class UserServiceImpl implements UserService {
         data.setName(name);
         data.setPassword(encryptedPassword);
         data.setRole(UserRole.ROLE_USER);
-
+        data.setStatus(Status.ACTIVE);
         userRepository.save(data);
 
         log.info("회원가입 완료 - 이메일: {}", email);
@@ -84,8 +85,7 @@ public class UserServiceImpl implements UserService {
     public Boolean checkPassword(Long userId, String password) {
         User user= userRepository.findByUserId(userId);
         String dbPassword=user.getPassword();
-        boolean match=bCryptPasswordEncoder.matches(password,dbPassword);
-        return match;
+        return bCryptPasswordEncoder.matches(password,dbPassword);
     }
 
 

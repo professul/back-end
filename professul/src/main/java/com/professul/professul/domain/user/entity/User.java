@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.sql.Timestamp;
 
 @Entity
 @Table(name="users")
@@ -20,8 +23,17 @@ public class User {
     private String name;
     @NonNull
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private Status status=Status.ACTIVE;
+
+    @CreationTimestamp
+    private Timestamp createDate;
+
     @Enumerated(EnumType.STRING)
     private UserRole role=UserRole.ROLE_USER;
+
+
 
 //    public User(String email, String name, String password, UserRole role) {
 //        this.email = email;

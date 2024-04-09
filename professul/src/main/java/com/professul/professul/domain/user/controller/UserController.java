@@ -6,6 +6,7 @@ import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.domain.user.service.UserService;
+import com.professul.professul.domain.user.dto.JoinDTO;
 import com.professul.professul.global.auth.service.TokenService;
 import com.professul.professul.global.auth.userDetails.PrincipalUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,7 +41,6 @@ public class UserController {
         } catch (EmailAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 이메일입니다");
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버오류발생");
         }
     }
