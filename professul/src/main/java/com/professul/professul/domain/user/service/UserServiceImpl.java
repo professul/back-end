@@ -1,13 +1,13 @@
 package com.professul.professul.domain.user.service;
 
 import com.professul.professul.domain.user.dto.JoinDTO;
-import com.professul.professul.domain.user.dto.ModifyUserDto;
 import com.professul.professul.domain.user.entity.Status;
 import com.professul.professul.domain.user.entity.User;
+import com.professul.professul.domain.user.entity.UserRole;
+import com.professul.professul.domain.user.repository.UserRepository;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
-import com.professul.professul.domain.user.repository.UserRepository;
-import com.professul.professul.domain.user.entity.UserRole;
+import com.professul.professul.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void joinProcess(JoinDTO joinDTO){ //회원가입
+    public void joinProcess(JoinDTO joinDTO) { //회원가입
         String email = joinDTO.getEmail();
         String name = joinDTO.getName();
 
@@ -62,30 +62,46 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User modifyUser(Long userId, ModifyUserDto modifyUserDto) throws UserModificationException {
-        User user= userRepository.findByUserId(userId);
+    public User modifyUserName(Long userId, String newName) throws UserModificationException {
+        User user = userRepository.findByUserId(userId);
         if (user == null) {
             throw new UserModificationException("사용자를 찾을 수 없습니다.");
         }
 
-        //이름 변경
-        if(modifyUserDto.getName()!=null && !modifyUserDto.getName().isEmpty()){
-            user.setName(modifyUserDto.getName());
+        user.setName(newName);
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    @Override
+    public User modifyUserPassword(Long userId, String newPassword) throws UserModificationException {
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new UserModificationException("사용자를 찾을 수 없습니다.");
         }
-        //비밀번호 변경
-        if(modifyUserDto.getPassword()!=null && !modifyUserDto.getPassword().isEmpty()){
-            String encodedPassword= bCryptPasswordEncoder.encode(modifyUserDto.getPassword());
+        if (newPassword != null && !newPassword.isEmpty()) {
+            String encodedPassword = bCryptPasswordEncoder.encode(newPassword);
             user.setPassword(encodedPassword);
         }
 
         return userRepository.save(user);
     }
 
+    @Transactional
+    @Override
+    public User findUserById(Long userId) throws UserNotFoundException {
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
+        }
+        return user;
+    }
+
     @Override
     public Boolean checkPassword(Long userId, String password) {
-        User user= userRepository.findByUserId(userId);
-        String dbPassword=user.getPassword();
-        return bCryptPasswordEncoder.matches(password,dbPassword);
+        User user = userRepository.findByUserId(userId);
+        String dbPassword = user.getPassword();
+        return bCryptPasswordEncoder.matches(password, dbPassword);
     }
 
 

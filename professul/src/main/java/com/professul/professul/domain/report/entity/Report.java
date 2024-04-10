@@ -41,5 +41,4 @@ public class Report {
     private Status status=Status.PENDING; //신고 기본값
 
 
-
 }

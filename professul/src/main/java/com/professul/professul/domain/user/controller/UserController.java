@@ -30,7 +30,7 @@ public class UserController {
 
     public UserController(UserService userService, TokenService tokenService) {
         this.userService = userService;
-        this.tokenService=tokenService;
+        this.tokenService = tokenService;
     }
 
     @PostMapping("/join")
@@ -46,40 +46,49 @@ public class UserController {
     }
 
     @PostMapping("/user/checkPassword") //비밀번호 확인
-    public ResponseEntity<?> checkPassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody CheckPasswordDto checkPasswordDto){
+    public ResponseEntity<?> checkPassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody CheckPasswordDto checkPasswordDto) {
         log.info("비밀번호 확인 진입");
         Long userId = principalUserDetails.getUserId();
-        boolean match= userService.checkPassword(userId, checkPasswordDto.getPassword());
-        if(match){
+        boolean match = userService.checkPassword(userId, checkPasswordDto.getPassword());
+        if (match) {
             return ResponseEntity.ok().build();
-        } else{
+        } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다");
         }
     }
 
 
-
     @PatchMapping("/user/modify")
-    @Transactional
     public ResponseEntity<Object> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Long userId = principalUserDetails.getUserId(); //유저아이디를 가져옴
         try {
-            User modifiedUser = userService.modifyUser(userId, modifyUserDto);
-            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(modifiedUser.getName());
+            User user = userService.findUserById(userId);
+            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(null);
+            boolean isPasswordChanged = false;
+
+            //이름 변경
+            if (modifyUserDto.getName() != null && !modifyUserDto.getName().isEmpty()) {
+                user = userService.modifyUserName(userId, modifyUserDto.getName());
+                responseDto.setName(user.getName());
+            }
+
+            // 비밀번호 변경
+            if (modifyUserDto.getPassword() != null && !modifyUserDto.getPassword().isEmpty()) {
+                user = userService.modifyUserPassword(userId, modifyUserDto.getPassword());
+                isPasswordChanged = true;
+            }
 
             // 비밀번호가 변경되었다면 토큰 재발급
-            if (modifyUserDto.getPassword() != null && !modifyUserDto.getPassword().isEmpty()) {
+            if (isPasswordChanged) {
                 tokenService.reissueToken(request, response);
             }
+
             return ResponseEntity.ok(responseDto);
         } catch (UserModificationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
         }
 
     }
-
-
-
 
     @GetMapping("/user/info")
     public ResponseEntity<UserInfoResponse> getUserInfo() {

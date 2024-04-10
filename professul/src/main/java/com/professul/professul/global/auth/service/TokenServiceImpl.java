@@ -34,7 +34,7 @@ public class TokenServiceImpl implements TokenService {
 
         if(cookies==null){
             log.warn("쿠키가 없습니다");
-            return new ResponseEntity<>("No cookies found", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("쿠키가 없어 로그인이 필요합니다.", HttpStatus.FORBIDDEN);
         }
         for (Cookie cookie : cookies) {
             log.debug("쿠키 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
@@ -49,7 +49,7 @@ public class TokenServiceImpl implements TokenService {
 
         if (refresh == null) {
             log.warn("리프레시 토큰이 null입니다.");
-            return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("refresh token null", HttpStatus.FORBIDDEN);
         }
 
         //expired check
