@@ -1,7 +1,7 @@
 package com.professul.professul.domain.user.service;
 
+import com.professul.professul.domain.user.dto.ChangePasswordDto;
 import com.professul.professul.domain.user.dto.JoinDTO;
-import com.professul.professul.domain.user.dto.ModifyUserDto;
 import com.professul.professul.domain.user.entity.User;
 
 public interface UserService {
@@ -10,7 +10,7 @@ public interface UserService {
 
     User modifyUserName(Long userId, String newName) throws Exception;
 
-    User modifyUserPassword(Long userId, String newPassword) throws Exception;
+    void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) throws Exception;
 
     User findUserById(Long userId) throws Exception;
 

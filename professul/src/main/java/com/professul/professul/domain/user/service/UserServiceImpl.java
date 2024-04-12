@@ -1,5 +1,6 @@
 package com.professul.professul.domain.user.service;
 
+import com.professul.professul.domain.user.dto.ChangePasswordDto;
 import com.professul.professul.domain.user.dto.JoinDTO;
 import com.professul.professul.domain.user.entity.Status;
 import com.professul.professul.domain.user.entity.User;
@@ -74,17 +75,24 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User modifyUserPassword(Long userId, String newPassword) throws UserModificationException {
+    public void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) throws UserModificationException {
         User user = userRepository.findByUserId(userId);
         if (user == null) {
             throw new UserModificationException("사용자를 찾을 수 없습니다.");
         }
-        if (newPassword != null && !newPassword.isEmpty()) {
-            String encodedPassword = bCryptPasswordEncoder.encode(newPassword);
-            user.setPassword(encodedPassword);
+
+        if (!bCryptPasswordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
+            throw new UserModificationException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        return userRepository.save(user);
+        if (!changePasswordDto.getNewPassword().equals(changePasswordDto.getConfirmPassword())) {
+            throw new UserModificationException("비밀번호가 일치하지 않습니다");
+        }
+
+        user.setPassword(bCryptPasswordEncoder.encode(changePasswordDto.getNewPassword()));
+
+
+        userRepository.save(user);
     }
 
     @Transactional

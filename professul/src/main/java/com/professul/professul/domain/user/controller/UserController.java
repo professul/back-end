@@ -64,23 +64,10 @@ public class UserController {
         try {
             User user = userService.findUserById(userId);
             ModifyUserResponseDto responseDto = new ModifyUserResponseDto(null);
-            boolean isPasswordChanged = false;
 
-            //이름 변경
             if (modifyUserDto.getName() != null && !modifyUserDto.getName().isEmpty()) {
                 user = userService.modifyUserName(userId, modifyUserDto.getName());
                 responseDto.setName(user.getName());
-            }
-
-            // 비밀번호 변경
-            if (modifyUserDto.getPassword() != null && !modifyUserDto.getPassword().isEmpty()) {
-                user = userService.modifyUserPassword(userId, modifyUserDto.getPassword());
-                isPasswordChanged = true;
-            }
-
-            // 비밀번호가 변경되었다면 토큰 재발급
-            if (isPasswordChanged) {
-                tokenService.reissueToken(request, response);
             }
 
             return ResponseEntity.ok(responseDto);
@@ -89,6 +76,20 @@ public class UserController {
         }
 
     }
+
+
+    @PutMapping("/user/change-password")
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request, HttpServletResponse response) {
+        Long userId = principalUserDetails.getUserId(); //유저아이디를 가져옴
+        try {
+            userService.modifyUserPassword(userId, changePasswordDto);
+            tokenService.reissueToken(request, response);
+            return ResponseEntity.ok().body("비밀번호가 변경되었습니다");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("비밀번호 변경 중 오류가 발생했습니다.");
+        }
+    }
+
 
     @GetMapping("/user/info")
     public ResponseEntity<UserInfoResponse> getUserInfo() {
