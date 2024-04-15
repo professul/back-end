@@ -111,6 +111,19 @@ public class UserServiceImpl implements UserService {
         String dbPassword = user.getPassword();
         return bCryptPasswordEncoder.matches(password, dbPassword);
     }
+    @Transactional
+    @Override
+    public void deactivateUser(Long userId) throws Exception {
+
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
+        }
+        user.setStatus(Status.CANCELED);
+        userRepository.save(user);
+
+
+    }
 
 
 }
