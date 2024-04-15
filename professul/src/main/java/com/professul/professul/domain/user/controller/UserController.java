@@ -91,6 +91,13 @@ public class UserController {
     }
 
 
+    @PostMapping("/user/delete/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) throws Exception {
+        log.info("회원탈퇴 요청: {}", userId);
+        userService.deactivateUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/user/info")
     public ResponseEntity<UserInfoResponse> getUserInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

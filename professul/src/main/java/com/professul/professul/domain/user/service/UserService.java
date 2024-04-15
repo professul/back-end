@@ -15,4 +15,7 @@ public interface UserService {
     User findUserById(Long userId) throws Exception;
 
     Boolean checkPassword(Long userId, String password);
+
+    void deactivateUser(Long userId) throws Exception;
+
 }
