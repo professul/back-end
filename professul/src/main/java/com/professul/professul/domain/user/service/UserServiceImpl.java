@@ -7,6 +7,7 @@ import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.domain.user.repository.UserRepository;
 import com.professul.professul.exception.EmailAlreadyExistsException;
+import com.professul.professul.exception.UnauthorizedAccessException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -111,17 +112,23 @@ public class UserServiceImpl implements UserService {
         String dbPassword = user.getPassword();
         return bCryptPasswordEncoder.matches(password, dbPassword);
     }
+
     @Transactional
     @Override
-    public void deactivateUser(Long userId) throws Exception {
+    public void deactivateUser(Long userId, UserRole userRole) throws Exception {
 
         User user = userRepository.findByUserId(userId);
         if (user == null) {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
         }
-        user.setStatus(Status.CANCELED);
-        userRepository.save(user);
 
+        if (userRole == UserRole.ROLE_ADMIN || user.getUserId().equals(userId)) {
+            user.setStatus(Status.CANCELED);
+            userRepository.save(user);
+
+        } else {
+            throw new UnauthorizedAccessException("탈퇴 처리 권한이 없습니다");
+        }
 
     }
 

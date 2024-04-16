@@ -1,6 +1,7 @@
 package com.professul.professul.domain.user.controller;
 
 import com.professul.professul.domain.user.dto.*;
+import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.dto.*;
 import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -94,7 +96,9 @@ public class UserController {
     @PostMapping("/user/delete/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) throws Exception {
         log.info("회원탈퇴 요청: {}", userId);
-        userService.deactivateUser(userId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserRole userRole = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) ? UserRole.ROLE_ADMIN : UserRole.ROLE_USER;
+        userService.deactivateUser(userId, userRole);
         return ResponseEntity.ok().build();
     }
 
