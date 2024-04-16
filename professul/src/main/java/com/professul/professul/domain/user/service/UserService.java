@@ -3,6 +3,7 @@ package com.professul.professul.domain.user.service;
 import com.professul.professul.domain.user.dto.ChangePasswordDto;
 import com.professul.professul.domain.user.dto.JoinDTO;
 import com.professul.professul.domain.user.entity.User;
+import com.professul.professul.domain.user.entity.UserRole;
 
 public interface UserService {
 
@@ -16,6 +17,6 @@ public interface UserService {
 
     Boolean checkPassword(Long userId, String password);
 
-    void deactivateUser(Long userId) throws Exception;
+    void deactivateUser(Long userId, UserRole userRole) throws Exception;
 
 }
