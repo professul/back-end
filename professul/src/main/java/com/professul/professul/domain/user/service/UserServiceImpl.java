@@ -10,10 +10,18 @@ import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UnauthorizedAccessException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.exception.UserNotFoundException;
+import com.professul.professul.review.entity.Review;
+import com.professul.professul.review.repository.ReviewRepository;
+import com.professul.professul.util.PageInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -21,10 +29,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final ReviewRepository reviewRepository;
 
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, ReviewRepository reviewRepository) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.reviewRepository=reviewRepository;
     }
 
 
@@ -130,6 +140,13 @@ public class UserServiceImpl implements UserService {
             throw new UnauthorizedAccessException("탈퇴 처리 권한이 없습니다");
         }
 
+    }
+
+    @Override
+    public List<Review> getReviewListByUser(Long userId, PageInfo pageInfo) throws Exception {
+        PageRequest pageRequest= PageRequest.of(pageInfo.getCurPage()-1, 9, Sort.by(Sort.Direction.DESC,"reviewId"));
+//        Page<Review> pages=reviewRepository.find
+        return null;
     }
 
 

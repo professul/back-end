@@ -102,6 +102,8 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+
+
     @GetMapping("/user/info")
     public ResponseEntity<UserInfoResponse> getUserInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -121,5 +123,8 @@ public class UserController {
         }
         return ResponseEntity.badRequest().body(null);
     }
+
+
+
 
 }
