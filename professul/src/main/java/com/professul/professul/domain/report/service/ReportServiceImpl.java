@@ -3,6 +3,7 @@ package com.professul.professul.domain.report.service;
 import com.professul.professul.domain.report.entity.Report;
 import com.professul.professul.domain.report.entity.Status;
 import com.professul.professul.domain.report.repository.ReportRepository;
+import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.domain.user.repository.UserRepository;
 import com.professul.professul.review.entity.Review;
 import com.professul.professul.review.repository.ReviewRepository;
@@ -58,5 +59,10 @@ public class ReportServiceImpl implements ReportService{
     @Override
     public void updateReportStatus(Long reportId, Status status) {
 
+    }
+
+    @Override
+    public Report createReport(User reporter, User reportedUser, Review review, String reason) {
+        return null;
     }
 }
