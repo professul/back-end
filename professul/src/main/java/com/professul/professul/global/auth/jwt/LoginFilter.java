@@ -57,7 +57,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             throw new RuntimeException(e);
         }
         String email = loginDTO.getEmail();
-        String password = loginDTO.getPassword();
+
         log.info("여기 직전");
         if (email != null) {
             log.info("이메일: {}", email);
@@ -74,6 +74,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             throw new LockedException("계정이 활성화 상태가 아닙니다");
         } else if (user.getStatus() == Status.CANCELED) {
             throw new DisabledException("탈퇴한 계정입니다");
+        } else if (user.getStatus() == Status.BANNED){
+            throw new DisabledException("강퇴된 계정입니다");
         }
 
         //token에 담은 검증을 위한 AuthenticationManager로 전달
@@ -148,7 +150,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
             log.error("로그인 실패: {}", failed.getMessage());
             if (log.isDebugEnabled()) {
-                failed.printStackTrace(); // 디버그 모드에서만 스택 트레이스 출력
+                failed.printStackTrace();
             }
 
         } catch (Exception e) {
