@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -93,13 +94,38 @@ public class UserController {
     }
 
 
+//    @PostMapping("/user/delete/{userId}")
+//    public ResponseEntity<?> withdrawUser(@PathVariable Long userId) throws Exception {
+//        log.info("회원탈퇴 요청: {}", userId);
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        UserRole userRole = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) ? UserRole.ROLE_ADMIN : UserRole.ROLE_USER;
+//        userService.deactivateUser(userId, userRole);
+//        return ResponseEntity.ok().build();
+//    }
+
     @PostMapping("/user/delete/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long userId) throws Exception {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> withdrawUser(@PathVariable Long userId) throws Exception {
         log.info("회원탈퇴 요청: {}", userId);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserRole userRole = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) ? UserRole.ROLE_ADMIN : UserRole.ROLE_USER;
-        userService.deactivateUser(userId, userRole);
+        userService.withdrawUser(userId);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/admin/user/suspend/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> suspendUser(@PathVariable Long userId) throws Exception{
+        log.info("회원정지요청:{}", userId);
+        userService.suspendUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/admin/user/ban/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> banUser(@PathVariable Long userId) throws Exception{
+        log.info("회원정지요청:{}", userId);
+        userService.banUser(userId);
+        return ResponseEntity.ok().build();
+
     }
 
 

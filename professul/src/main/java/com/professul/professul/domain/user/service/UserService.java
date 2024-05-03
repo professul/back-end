@@ -21,7 +21,11 @@ public interface UserService {
 
     Boolean checkPassword(Long userId, String password);
 
-    void deactivateUser(Long userId, UserRole userRole) throws Exception;
+    void suspendUser(Long userId) throws Exception;
+
+    void banUser(Long userId) throws Exception;
+
+    void withdrawUser(Long userId) throws Exception;
 
     List<Review> getReviewListByUser(Long userId, PageInfo pageInfo) throws Exception;
 

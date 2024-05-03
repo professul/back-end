@@ -17,11 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static com.professul.professul.domain.user.entity.Status.CANCELED;
 
 @Slf4j
 @Service
@@ -123,22 +126,29 @@ public class UserServiceImpl implements UserService {
         return bCryptPasswordEncoder.matches(password, dbPassword);
     }
 
-    @Transactional
     @Override
-    public void deactivateUser(Long userId, UserRole userRole) throws Exception {
+    public void suspendUser(Long userId) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+        user.setStatus(Status.SUSPENDED);
+        userRepository.save(user);
+    }
 
-        User user = userRepository.findByUserId(userId);
+    @Override
+    public void banUser(Long userId) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+        user.setStatus(Status.BANNED);
+        userRepository.save(user);
+    }
+
+
+    @Override
+    public void withdrawUser(Long userId) throws Exception {
+        User user=userRepository.findByUserId(userId);
         if (user == null) {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
         }
-
-        if (userRole == UserRole.ROLE_ADMIN || user.getUserId().equals(userId)) {
-            user.setStatus(Status.CANCELED);
-            userRepository.save(user);
-
-        } else {
-            throw new UnauthorizedAccessException("탈퇴 처리 권한이 없습니다");
-        }
+        user.setStatus(CANCELED);
+        userRepository.save(user);
 
     }
 
