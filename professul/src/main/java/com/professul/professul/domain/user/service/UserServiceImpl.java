@@ -99,12 +99,15 @@ public class UserServiceImpl implements UserService {
             throw new UserModificationException("현재 비밀번호가 일치하지 않습니다.");
         }
 
+        if(bCryptPasswordEncoder.matches(changePasswordDto.getNewPassword(), user.getPassword())){
+            throw new UserModificationException("새 비밀번호는 기존의 비밀번호와 같을 수 없습니다.");
+        }
+
         if (!changePasswordDto.getNewPassword().equals(changePasswordDto.getConfirmPassword())) {
             throw new UserModificationException("비밀번호가 일치하지 않습니다");
         }
 
         user.setPassword(bCryptPasswordEncoder.encode(changePasswordDto.getNewPassword()));
-
 
         userRepository.save(user);
     }
