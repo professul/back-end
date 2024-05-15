@@ -94,14 +94,6 @@ public class UserController {
     }
 
 
-//    @PostMapping("/user/delete/{userId}")
-//    public ResponseEntity<?> withdrawUser(@PathVariable Long userId) throws Exception {
-//        log.info("회원탈퇴 요청: {}", userId);
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        UserRole userRole = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) ? UserRole.ROLE_ADMIN : UserRole.ROLE_USER;
-//        userService.deactivateUser(userId, userRole);
-//        return ResponseEntity.ok().build();
-//    }
 
     @PostMapping("/user/delete/{userId}")
     @PreAuthorize("isAuthenticated()")
@@ -122,13 +114,11 @@ public class UserController {
     @PostMapping("/admin/user/ban/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> banUser(@PathVariable Long userId) throws Exception{
-        log.info("회원정지요청:{}", userId);
+        log.info("회원강퇴요청:{}", userId);
         userService.banUser(userId);
         return ResponseEntity.ok().build();
 
     }
-
-
 
     @GetMapping("/user/info")
     public ResponseEntity<UserInfoResponse> getUserInfo() {

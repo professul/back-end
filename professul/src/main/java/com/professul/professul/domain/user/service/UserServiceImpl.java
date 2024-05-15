@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, ReviewRepository reviewRepository) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.reviewRepository=reviewRepository;
+        this.reviewRepository = reviewRepository;
     }
 
 
@@ -64,12 +64,10 @@ public class UserServiceImpl implements UserService {
         log.info("비밀번호 암호화 완료 - 이메일: {}", email);
 
         log.info("새로운 회원 생성 - 이메일: {}, 이름: {}", email, name);
-        User data = new User();
-        data.setEmail(email);
-        data.setName(name);
-        data.setPassword(encryptedPassword);
-        data.setRole(UserRole.ROLE_USER);
-        data.setStatus(Status.ACTIVE);
+
+        User data = new User(null, email, name, encryptedPassword, Status.ACTIVE, null, null, UserRole.ROLE_USER);
+
+
         userRepository.save(data);
 
         log.info("회원가입 완료 - 이메일: {}", email);
@@ -82,8 +80,7 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new UserModificationException("사용자를 찾을 수 없습니다.");
         }
-
-        user.setName(newName);
+        user.changeName(newName);
         return userRepository.save(user);
     }
 
@@ -99,7 +96,7 @@ public class UserServiceImpl implements UserService {
             throw new UserModificationException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        if(bCryptPasswordEncoder.matches(changePasswordDto.getNewPassword(), user.getPassword())){
+        if (bCryptPasswordEncoder.matches(changePasswordDto.getNewPassword(), user.getPassword())) {
             throw new UserModificationException("새 비밀번호는 기존의 비밀번호와 같을 수 없습니다.");
         }
 
@@ -107,8 +104,8 @@ public class UserServiceImpl implements UserService {
             throw new UserModificationException("비밀번호가 일치하지 않습니다");
         }
 
-        user.setPassword(bCryptPasswordEncoder.encode(changePasswordDto.getNewPassword()));
 
+        user.changePassword(changePasswordDto.getNewPassword(), bCryptPasswordEncoder);
         userRepository.save(user);
     }
 
@@ -132,32 +129,32 @@ public class UserServiceImpl implements UserService {
     @Override
     public void suspendUser(Long userId) throws Exception {
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        user.setStatus(Status.SUSPENDED);
+        user.suspend();
         userRepository.save(user);
     }
 
     @Override
     public void banUser(Long userId) throws Exception {
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        user.setStatus(Status.BANNED);
+        user.ban();
         userRepository.save(user);
     }
 
 
     @Override
     public void withdrawUser(Long userId) throws Exception {
-        User user=userRepository.findByUserId(userId);
+        User user = userRepository.findByUserId(userId);
         if (user == null) {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
         }
-        user.setStatus(CANCELED);
+        user.ban();
         userRepository.save(user);
 
     }
 
     @Override
     public List<Review> getReviewListByUser(Long userId, PageInfo pageInfo) throws Exception {
-        PageRequest pageRequest= PageRequest.of(pageInfo.getCurPage()-1, 9, Sort.by(Sort.Direction.DESC,"reviewId"));
+        PageRequest pageRequest = PageRequest.of(pageInfo.getCurPage() - 1, 9, Sort.by(Sort.Direction.DESC, "reviewId"));
 //        Page<Review> pages=reviewRepository.find
         return null;
     }
