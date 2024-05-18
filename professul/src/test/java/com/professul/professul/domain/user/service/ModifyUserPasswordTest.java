@@ -48,13 +48,13 @@ class ModifyUserPasswordTest {
         when(userRepository.findByUserId(userId)).thenReturn(user);
         when(bCryptPasswordEncoder.matches(currentPassword, user.getPassword())).thenReturn(true);
         when(bCryptPasswordEncoder.matches(newPassword, user.getPassword())).thenReturn(false);
-        when(bCryptPasswordEncoder.encode(newPassword)).thenReturn("$2a$10$newEncryptedPassword");
+        when(bCryptPasswordEncoder.encode(newPassword)).thenReturn("newEncryptedPassword");
 
         // When
         userService.modifyUserPassword(userId, changePasswordDto);
 
         // Then
-        assertEquals("$2a$10$newEncryptedPassword", user.getPassword());
+        assertEquals("newEncryptedPassword", user.getPassword());
         verify(userRepository, times(1)).save(user);
     }
 

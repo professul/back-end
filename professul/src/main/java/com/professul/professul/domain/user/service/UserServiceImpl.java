@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -119,6 +120,7 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+
     @Override
     public Boolean checkPassword(Long userId, String password) {
         User user = userRepository.findByUserId(userId);
@@ -126,6 +128,8 @@ public class UserServiceImpl implements UserService {
         return bCryptPasswordEncoder.matches(password, dbPassword);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     @Override
     public void suspendUser(Long userId) throws Exception {
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
@@ -133,21 +137,25 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     @Override
-    public void banUser(Long userId) throws Exception {
+    public void banUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         user.ban();
         userRepository.save(user);
     }
 
 
+
+    @Transactional
     @Override
-    public void withdrawUser(Long userId) throws Exception {
-        User user = userRepository.findByUserId(userId);
+    public void withdrawUser(Long userId) { //사용자 탈퇴
+        User user = userRepository.findById(userId).orElseThrow(()-> new UsernameNotFoundException("사용자를 찾을 수 없습니다"));
         if (user == null) {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
         }
-        user.ban();
+        user.withdraw();
         userRepository.save(user);
 
     }
