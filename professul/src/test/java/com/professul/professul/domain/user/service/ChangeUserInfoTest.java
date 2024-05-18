@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-class UserServiceImplTest {
+class ChangeUserInfoTest {
 
 
     @Mock
@@ -28,8 +28,6 @@ class UserServiceImplTest {
 
     @InjectMocks
     private UserServiceImpl userService;
-
-    private User user;
 
     @BeforeEach
     public void setUp() {
@@ -66,9 +64,7 @@ class UserServiceImplTest {
         when(userRepository.findByUserId(userId)).thenReturn(null);
 
         // When & Then
-        assertThrows(UserModificationException.class, () -> {
-            userService.modifyUserName(userId, newName);
-        });
+        assertThrows(UserModificationException.class, () -> userService.modifyUserName(userId, newName));
     }
 }
 
