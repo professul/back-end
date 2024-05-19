@@ -23,6 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.professul.professul.domain.user.entity.Status.CANCELED;
@@ -66,8 +67,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("새로운 회원 생성 - 이메일: {}, 이름: {}", email, name);
 
-        User data = new User(null, email, name, encryptedPassword, Status.ACTIVE, null, null, UserRole.ROLE_USER);
-
+        User data = new User(null, email, name, encryptedPassword, Status.ACTIVE, UserRole.ROLE_USER);
 
         userRepository.save(data);
 
@@ -105,7 +105,6 @@ public class UserServiceImpl implements UserService {
             throw new UserModificationException("비밀번호가 일치하지 않습니다");
         }
 
-
         user.changePassword(changePasswordDto.getNewPassword(), bCryptPasswordEncoder);
         userRepository.save(user);
     }
@@ -128,21 +127,29 @@ public class UserServiceImpl implements UserService {
         return bCryptPasswordEncoder.matches(password, dbPassword);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
-    @Override
-    public void suspendUser(Long userId) throws Exception {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        user.suspend();
-        userRepository.save(user);
-    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @Override
-    public void banUser(Long userId) {
+    public void activateUser(Long userId) throws Exception {
+
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Override
+    public void suspendUser(Long userId, LocalDate until) throws Exception {
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-        user.ban();
+        user.suspend(until);
+        userRepository.save(user);
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Override
+    public void banUser(Long userId, String reason) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+        user.ban(reason);
         userRepository.save(user);
     }
 

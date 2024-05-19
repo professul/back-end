@@ -42,7 +42,7 @@ class ModifyUserPasswordTest {
         String newPassword = "newPassword";
         String confirmPassword="newPassword";
         ChangePasswordDto changePasswordDto = new ChangePasswordDto(currentPassword, newPassword, confirmPassword);
-        User user = new User(userId, "test@example.com", "Test User", currentPassword, Status.ACTIVE, null, null, UserRole.ROLE_USER);
+        User user = new User(userId, "test@example.com", "Test User", currentPassword, Status.ACTIVE, UserRole.ROLE_USER);
 
         // Mock 설정
         when(userRepository.findByUserId(userId)).thenReturn(user);
@@ -77,7 +77,7 @@ class ModifyUserPasswordTest {
         // Given
         Long userId = 1L;
         ChangePasswordDto changePasswordDto = new ChangePasswordDto("wrongCurrentPassword", "newPassword", "confirmPassword");
-        User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, null, null, UserRole.ROLE_USER);
+        User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, UserRole.ROLE_USER);
 
         when(userRepository.findByUserId(userId)).thenReturn(user);
         when(bCryptPasswordEncoder.matches("wrongCurrentPassword", user.getPassword())).thenReturn(false);
@@ -93,7 +93,7 @@ class ModifyUserPasswordTest {
         // Given
         Long userId = 1L;
         ChangePasswordDto changePasswordDto = new ChangePasswordDto("currentPassword", "samePassword", "confirmPassword");
-        User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, null, null, UserRole.ROLE_USER);
+        User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, UserRole.ROLE_USER);
 
         when(userRepository.findByUserId(userId)).thenReturn(user);
         when(bCryptPasswordEncoder.matches("currentPassword", user.getPassword())).thenReturn(true);
@@ -109,7 +109,7 @@ class ModifyUserPasswordTest {
         // Given
         Long userId = 1L;
         ChangePasswordDto changePasswordDto = new ChangePasswordDto("currentPassword", "newPassword", "differentConfirmPassword");
-        User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, null, null, UserRole.ROLE_USER);
+        User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, UserRole.ROLE_USER);
 
         when(userRepository.findByUserId(userId)).thenReturn(user);
         when(bCryptPasswordEncoder.matches("currentPassword", user.getPassword())).thenReturn(true);
