@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Entity
 @Table(name="users")
@@ -38,16 +39,19 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role=UserRole.ROLE_USER;
 
+    private LocalDate suspendUntil;
+
+    private String banReason;
+
+
 
     // 생성자 정의
-    public User(Long userId,String email, String name, String password, Status status, Timestamp createDate, Timestamp editDate, UserRole role) {
+    public User(Long userId,String email, String name, String password, Status status, UserRole role) {
         this.userId=userId;
         this.email = email;
         this.name = name;
         this.password = password;
         this.status = status;
-        this.createDate = createDate;
-        this.editDate = editDate;
         this.role = role;
     }
 
@@ -61,12 +65,14 @@ public class User {
         this.password=passwordEncoder.encode(newPassword);
     }
 
-    public void suspend(){
+    public void suspend(LocalDate until){
         this.status=Status.SUSPENDED;
+        this.suspendUntil=until;
     }
 
-    public void ban(){
+    public void ban(String reason){
         this.status=Status.BANNED;
+        this.banReason=reason;
     }
 
     public void withdraw(){

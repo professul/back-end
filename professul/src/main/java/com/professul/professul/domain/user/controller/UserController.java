@@ -13,6 +13,7 @@ import com.professul.professul.global.auth.userDetails.PrincipalUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,8 +21,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @Slf4j
 @RestController
@@ -105,19 +109,27 @@ public class UserController {
 
     @PostMapping("/admin/user/suspend/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> suspendUser(@PathVariable Long userId) throws Exception{
-        log.info("회원정지요청:{}", userId);
-        userService.suspendUser(userId);
+    public ResponseEntity<?> suspendUser(@PathVariable Long userId, @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) throws Exception{
+        log.info("회원 정지 요청: {}, 정지 기간: {}", userId, until);
+        userService.suspendUser(userId, until);
         return ResponseEntity.ok().build();
     }
 
+
     @PostMapping("/admin/user/ban/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> banUser(@PathVariable Long userId) throws Exception{
-        log.info("회원강퇴요청:{}", userId);
-        userService.banUser(userId);
-        return ResponseEntity.ok().build();
-
+    public ResponseEntity<?> banUser(@PathVariable Long userId, @RequestParam("reason") String reason) throws Exception{
+        log.info("회원 차단 요청: {}, 사유: {}", userId, reason);
+        try {
+            userService.banUser(userId, reason);
+            return ResponseEntity.ok().build();
+        }catch (UsernameNotFoundException e){
+            log.error("사용자 찾기 실패: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }catch (Exception e){
+            log.error("회원 차단 중 오류 발생",e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/user/info")

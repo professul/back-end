@@ -7,6 +7,7 @@ import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.review.entity.Review;
 import com.professul.professul.util.PageInfo;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface UserService {
@@ -21,9 +22,10 @@ public interface UserService {
 
     Boolean checkPassword(Long userId, String password);
 
-    void suspendUser(Long userId) throws Exception;
+    void suspendUser(Long userId, LocalDate until) throws Exception;
 
-    void banUser(Long userId) throws Exception;
+    void activateUser(Long userId) throws Exception;
+    void banUser(Long userId, String reason) throws Exception;
 
     void withdrawUser(Long userId) throws Exception;
 

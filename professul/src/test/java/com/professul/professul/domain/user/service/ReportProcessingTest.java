@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,16 +32,55 @@ public class ReportProcessingTest {
         MockitoAnnotations.openMocks(this);
     }
 
+
+    @Test
+    @DisplayName("사용자정지성공")
+    void suspendUser() throws Exception {
+        //Given
+        Long userId=1L;
+        LocalDate suspendUntil=LocalDate.now().plusDays(7);
+        User user = new User(userId, "test@example.com", "Test User", "password", Status.ACTIVE, UserRole.ROLE_USER);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        //when
+        userService.suspendUser(userId,suspendUntil);
+
+        //Then
+        assertEquals(Status.SUSPENDED, user.getStatus());
+        assertEquals(suspendUntil, user.getSuspendUntil()); // 일시 정지 기간도 확인
+        verify(userRepository,times(1)).save(user);
+
+    }
+
+
+    @Test
+    @DisplayName("사용자 정지 실패 - 사용자를 찾을 수 없음")
+    void suspendUserFailUserNotFound() {
+        // Given
+        Long userId = 2L;
+        LocalDate suspendUntil=LocalDate.now().plusDays(7);
+
+        // Mock 설정
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(UsernameNotFoundException.class, () -> userService.suspendUser(userId,suspendUntil));
+        verify(userRepository, times(0)).save(any(User.class)); // 사용자를 찾을 수 없기 때문에 save 메소드가 호출되지 않아야 함
+    }
+
+
     @Test
     @DisplayName("사용자차단성공")
     void banUser() {
         //Given
         Long userId=1L;
-        User user = new User(userId, "test@example.com", "Test User", "password", Status.ACTIVE, null, null, UserRole.ROLE_USER);
+        String reason= "욕설누적";
+        User user = new User(userId, "test@example.com", "Test User", "password", Status.ACTIVE, UserRole.ROLE_USER);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        userService.banUser(userId);
+        userService.banUser(userId, reason);
 
         //Then
         assertEquals(Status.BANNED, user.getStatus());
@@ -52,12 +92,12 @@ public class ReportProcessingTest {
     void banUserFailUserNotFound() {
         // Given
         Long userId = 2L;
-
+        String reason= "욕설누적";
         // Mock 설정
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(UsernameNotFoundException.class, () -> userService.banUser(userId));
+        assertThrows(UsernameNotFoundException.class, () -> userService.banUser(userId,reason));
         verify(userRepository, times(0)).save(any(User.class)); // 사용자를 찾을 수 없기 때문에 save 메소드가 호출되지 않아야 함
     }
 
@@ -68,7 +108,7 @@ public class ReportProcessingTest {
     void withdrawUser(){
         //Given
         Long userId=1L;
-        User user = new User(userId, "test@example.com", "Test User", "password", Status.ACTIVE, null, null, UserRole.ROLE_USER);
+        User user = new User(userId, "test@example.com", "Test User", "password", Status.ACTIVE, UserRole.ROLE_USER);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -78,6 +118,15 @@ public class ReportProcessingTest {
         assertEquals(Status.CANCELED, user.getStatus());
         verify(userRepository,times(1)).save(user);
     }
+
+    @Test
+    @DisplayName("사용자 사면 성공")
+    void activateUser(){
+        //Given
+        Long userId=1L;
+    }
+
+
 
     @Test
     @DisplayName("사용자 탈퇴 실패 - 사용자를 찾을 수 없음")

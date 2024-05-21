@@ -23,9 +23,6 @@ class ChangeUserInfoTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -41,7 +38,7 @@ class ChangeUserInfoTest {
         Long userId = 1L;
         String newName = "New Name";
 
-        User user = new User(userId, "test@example.com", "Old Name", "password", Status.ACTIVE, null, null, UserRole.ROLE_USER);
+        User user = new User(userId, "test@example.com", "Old Name", "password", Status.ACTIVE, UserRole.ROLE_USER);
 
         when(userRepository.findByUserId(userId)).thenReturn(user);
 
