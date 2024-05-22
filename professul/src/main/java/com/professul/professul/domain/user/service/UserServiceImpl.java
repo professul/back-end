@@ -1,16 +1,32 @@
 package com.professul.professul.domain.user.service;
 
+import com.professul.professul.domain.user.dto.ChangePasswordDto;
 import com.professul.professul.domain.user.dto.JoinDTO;
-import com.professul.professul.domain.user.dto.ModifyUserDto;
+import com.professul.professul.domain.user.entity.Status;
 import com.professul.professul.domain.user.entity.User;
-import com.professul.professul.exception.EmailAlreadyExistsException;
-import com.professul.professul.exception.UserModificationException;
-import com.professul.professul.domain.user.repository.UserRepository;
 import com.professul.professul.domain.user.entity.UserRole;
+import com.professul.professul.domain.user.repository.UserRepository;
+import com.professul.professul.exception.EmailAlreadyExistsException;
+import com.professul.professul.exception.UnauthorizedAccessException;
+import com.professul.professul.exception.UserModificationException;
+import com.professul.professul.exception.UserNotFoundException;
+import com.professul.professul.review.entity.Review;
+import com.professul.professul.review.repository.ReviewRepository;
+import com.professul.professul.util.PageInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import static com.professul.professul.domain.user.entity.Status.CANCELED;
 
 @Slf4j
 @Service
@@ -18,16 +34,18 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final ReviewRepository reviewRepository;
 
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, ReviewRepository reviewRepository) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.reviewRepository = reviewRepository;
     }
 
 
     @Transactional
     @Override
-    public void joinProcess(JoinDTO joinDTO) throws Exception { //회원가입
+    public void joinProcess(JoinDTO joinDTO) { //회원가입
         String email = joinDTO.getEmail();
         String name = joinDTO.getName();
 
@@ -48,11 +66,8 @@ public class UserServiceImpl implements UserService {
         log.info("비밀번호 암호화 완료 - 이메일: {}", email);
 
         log.info("새로운 회원 생성 - 이메일: {}, 이름: {}", email, name);
-        User data = new User();
-        data.setEmail(email);
-        data.setName(name);
-        data.setPassword(encryptedPassword);
-        data.setRole(UserRole.ROLE_USER);
+
+        User data = new User(null, email, name, encryptedPassword, Status.ACTIVE, UserRole.ROLE_USER);
 
         userRepository.save(data);
 
@@ -61,31 +76,102 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User modifyUser(Long userId, ModifyUserDto modifyUserDto) throws UserModificationException {
-        User user= userRepository.findByUserId(userId);
+    public User modifyUserName(Long userId, String newName) throws UserModificationException {
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new UserModificationException("사용자를 찾을 수 없습니다.");
+        }
+        user.changeName(newName);
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    @Override
+    public void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) throws UserModificationException {
+        User user = userRepository.findByUserId(userId);
         if (user == null) {
             throw new UserModificationException("사용자를 찾을 수 없습니다.");
         }
 
-        //이름 변경
-        if(modifyUserDto.getName()!=null && !modifyUserDto.getName().isEmpty()){
-            user.setName(modifyUserDto.getName());
-        }
-        //비밀번호 변경
-        if(modifyUserDto.getPassword()!=null && !modifyUserDto.getPassword().isEmpty()){
-            String encodedPassword= bCryptPasswordEncoder.encode(modifyUserDto.getPassword());
-            user.setPassword(encodedPassword);
+        if (!bCryptPasswordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
+            throw new UserModificationException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        return userRepository.save(user);
+        if (bCryptPasswordEncoder.matches(changePasswordDto.getNewPassword(), user.getPassword())) {
+            throw new UserModificationException("새 비밀번호는 기존의 비밀번호와 같을 수 없습니다.");
+        }
+
+        if (!changePasswordDto.getNewPassword().equals(changePasswordDto.getConfirmPassword())) {
+            throw new UserModificationException("비밀번호가 일치하지 않습니다");
+        }
+
+        user.changePassword(changePasswordDto.getNewPassword(), bCryptPasswordEncoder);
+        userRepository.save(user);
     }
+
+    @Transactional
+    @Override
+    public User findUserById(Long userId) throws UserNotFoundException {
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
+        }
+        return user;
+    }
+
 
     @Override
     public Boolean checkPassword(Long userId, String password) {
-        User user= userRepository.findByUserId(userId);
-        String dbPassword=user.getPassword();
-        boolean match=bCryptPasswordEncoder.matches(password,dbPassword);
-        return match;
+        User user = userRepository.findByUserId(userId);
+        String dbPassword = user.getPassword();
+        return bCryptPasswordEncoder.matches(password, dbPassword);
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Override
+    public void activateUser(Long userId) throws Exception {
+
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Override
+    public void suspendUser(Long userId, LocalDate until) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+        user.suspend(until);
+        userRepository.save(user);
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Override
+    public void banUser(Long userId, String reason) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+        user.ban(reason);
+        userRepository.save(user);
+    }
+
+
+
+    @Transactional
+    @Override
+    public void withdrawUser(Long userId) { //사용자 탈퇴
+        User user = userRepository.findById(userId).orElseThrow(()-> new UsernameNotFoundException("사용자를 찾을 수 없습니다"));
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
+        }
+        user.withdraw();
+        userRepository.save(user);
+
+    }
+
+    @Override
+    public List<Review> getReviewListByUser(Long userId, PageInfo pageInfo) throws Exception {
+        PageRequest pageRequest = PageRequest.of(pageInfo.getCurPage() - 1, 9, Sort.by(Sort.Direction.DESC, "reviewId"));
+//        Page<Review> pages=reviewRepository.find
+        return null;
     }
 
 

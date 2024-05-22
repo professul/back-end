@@ -1,23 +1,31 @@
 package com.professul.professul.domain.user.controller;
 
 import com.professul.professul.domain.user.dto.*;
+import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.dto.*;
 import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.domain.user.service.UserService;
+import com.professul.professul.domain.user.dto.JoinDTO;
 import com.professul.professul.global.auth.service.TokenService;
 import com.professul.professul.global.auth.userDetails.PrincipalUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @Slf4j
 @RestController
@@ -29,7 +37,7 @@ public class UserController {
 
     public UserController(UserService userService, TokenService tokenService) {
         this.userService = userService;
-        this.tokenService=tokenService;
+        this.tokenService = tokenService;
     }
 
     @PostMapping("/join")
@@ -40,37 +48,35 @@ public class UserController {
         } catch (EmailAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 이메일입니다");
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버오류발생");
         }
     }
 
     @PostMapping("/user/checkPassword") //비밀번호 확인
-    public ResponseEntity<?> checkPassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody CheckPasswordDto checkPasswordDto){
+    public ResponseEntity<?> checkPassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody CheckPasswordDto checkPasswordDto) {
         log.info("비밀번호 확인 진입");
         Long userId = principalUserDetails.getUserId();
-        boolean match= userService.checkPassword(userId, checkPasswordDto.getPassword());
-        if(match){
+        boolean match = userService.checkPassword(userId, checkPasswordDto.getPassword());
+        if (match) {
             return ResponseEntity.ok().build();
-        } else{
+        } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다");
         }
     }
 
 
-
     @PatchMapping("/user/modify")
-    @Transactional
     public ResponseEntity<Object> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Long userId = principalUserDetails.getUserId(); //유저아이디를 가져옴
         try {
-            User modifiedUser = userService.modifyUser(userId, modifyUserDto);
-            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(modifiedUser.getName());
+            User user = userService.findUserById(userId);
+            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(null);
 
-            // 비밀번호가 변경되었다면 토큰 재발급
-            if (modifyUserDto.getPassword() != null && !modifyUserDto.getPassword().isEmpty()) {
-                tokenService.reissueToken(request, response);
+            if (modifyUserDto.getName() != null && !modifyUserDto.getName().isEmpty()) {
+                user = userService.modifyUserName(userId, modifyUserDto.getName());
+                responseDto.setName(user.getName());
             }
+
             return ResponseEntity.ok(responseDto);
         } catch (UserModificationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
@@ -79,7 +85,52 @@ public class UserController {
     }
 
 
+    @PutMapping("/user/change-password")
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request, HttpServletResponse response) {
+        Long userId = principalUserDetails.getUserId(); //유저아이디를 가져옴
+        try {
+            userService.modifyUserPassword(userId, changePasswordDto);
+            tokenService.reissueToken(request, response);
+            return ResponseEntity.ok().body("비밀번호가 변경되었습니다");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("비밀번호 변경 중 오류가 발생했습니다.");
+        }
+    }
 
+
+
+    @PostMapping("/user/delete/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> withdrawUser(@PathVariable Long userId) throws Exception {
+        log.info("회원탈퇴 요청: {}", userId);
+        userService.withdrawUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/admin/user/suspend/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> suspendUser(@PathVariable Long userId, @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) throws Exception{
+        log.info("회원 정지 요청: {}, 정지 기간: {}", userId, until);
+        userService.suspendUser(userId, until);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PostMapping("/admin/user/ban/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> banUser(@PathVariable Long userId, @RequestParam("reason") String reason) throws Exception{
+        log.info("회원 차단 요청: {}, 사유: {}", userId, reason);
+        try {
+            userService.banUser(userId, reason);
+            return ResponseEntity.ok().build();
+        }catch (UsernameNotFoundException e){
+            log.error("사용자 찾기 실패: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }catch (Exception e){
+            log.error("회원 차단 중 오류 발생",e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
     @GetMapping("/user/info")
     public ResponseEntity<UserInfoResponse> getUserInfo() {
@@ -100,5 +151,8 @@ public class UserController {
         }
         return ResponseEntity.badRequest().body(null);
     }
+
+
+
 
 }

@@ -1,7 +1,7 @@
-package com.professul.professul.domain.user.controller;
+package com.professul.professul.domain.report.controller;
 
-import com.professul.professul.entity.Report;
-import com.professul.professul.repository.ReportRepository;
+import com.professul.professul.domain.report.entity.Report;
+import com.professul.professul.domain.report.repository.ReportRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,11 +10,11 @@ import java.util.List;
 
 
 @RestController
-public class AdminController {
+public class ReportController {
 
     private final ReportRepository reportRepository;
 
-    public AdminController(ReportRepository reportRepository) {
+    public ReportController(ReportRepository reportRepository) {
         this.reportRepository = reportRepository;
     }
 
