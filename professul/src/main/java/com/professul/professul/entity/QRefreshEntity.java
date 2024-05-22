@@ -2,6 +2,7 @@ package com.professul.professul.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import com.professul.professul.global.auth.entity.RefreshEntity;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;

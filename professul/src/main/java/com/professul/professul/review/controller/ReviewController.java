@@ -53,12 +53,12 @@ public class ReviewController {
     }
 
     // 교수 한명 리뷰 조회
-    @GetMapping("/5")
-    public ResponseEntity<List<ReviewDTO>> getReview() throws Exception {
+    @GetMapping("/{profId}")
+    public ResponseEntity<List<ReviewDTO>> getReview(@PathVariable("profId") int profId) throws Exception {
         log.debug("C: getReview() 호출");
 
         try {
-            List<ReviewDTO> rList = rService.getReviewList(5);
+            List<ReviewDTO> rList = rService.getReviewList(profId);
 
             return new ResponseEntity<>(rList, HttpStatus.OK);
         } catch (Exception e) {
@@ -69,9 +69,10 @@ public class ReviewController {
 
     // 교수 리스트 조회
     @GetMapping("/list")
+    @ResponseBody
     public ResponseEntity<List<ProfessorDTO>> getProfList(@RequestParam(name = "searchType", required = false) String searchType,
                                                           @RequestParam(name = "search", required = false) String search) throws Exception {
-        log.debug("C: getProfList() 호출");
+        log.info("C: getProfList() 호출");
 
         try {
             List<ProfessorDTO> pList;
@@ -86,7 +87,7 @@ public class ReviewController {
 
             return new ResponseEntity<>(pList, HttpStatus.OK);
         } catch (Exception e) {
-            log.debug("교수 리스트 조회 불가", e);
+            log.info("교수 리스트 조회 불가", e);
             return new ResponseEntity<>(Collections.emptyList(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

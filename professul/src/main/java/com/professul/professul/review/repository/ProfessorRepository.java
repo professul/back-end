@@ -14,8 +14,8 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long>, Pro
     @Query("SELECT MAX(profId) FROM Professor")
     int findMaxProfId();
 
-    List<Professor> findByProfNameContaining(String profName);
+    List<Professor> findByProfNameContainingOrderByProfName(String profName);
 
-    List<Professor> findByUnivNameContaining(String univName);
+    List<Professor> findByUnivNameContainingOrderByProfName(String univName);
 
 }

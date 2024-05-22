@@ -86,6 +86,8 @@ public class ReviewServiceImpl implements ReviewService {
             pDTOList.add(professor.toProfessorDTO());
         }
 
+        log.debug("pDTOList {}", pDTOList);
+
         return pDTOList;
     }
 
@@ -100,7 +102,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         // 검색 o(교수명)
         if(searchType.equals("교수명")) {
-            pList = profRepository.findByProfNameContaining(search);
+            pList = profRepository.findByProfNameContainingOrderByProfName(search);
 
             // entity -> dto
             for(Professor professor : pList) {
@@ -111,13 +113,15 @@ public class ReviewServiceImpl implements ReviewService {
         // 검색 o(학교명)
         if(searchType.equals("학교명")) {
             log.debug("학교명 검색");
-            pList = profRepository.findByUnivNameContaining(search);
+            pList = profRepository.findByUnivNameContainingOrderByProfName(search);
 
             // entity -> dto
             for(Professor professor : pList) {
                 pDTOList.add(professor.toProfessorDTO());
             }
         }
+
+        log.debug("pDTOList {}", pDTOList);
 
         return pDTOList;
     }

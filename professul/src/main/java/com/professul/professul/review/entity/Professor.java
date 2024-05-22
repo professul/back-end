@@ -43,7 +43,7 @@ public class Professor {
         return ProfessorDTO.builder()
                 .profId(profId)
                 .univName(univName)
-                .profName(profName)
+                .deptName(deptName)
                 .profName(profName)
                 .rating(rating)
                 .build();
