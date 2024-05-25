@@ -132,6 +132,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void activateUser(Long userId) throws Exception {
+        User user= userRepository.findByUserId(userId);
+        user.activate();
+        userRepository.save(user);
+
 
     }
     @PreAuthorize("hasRole('ADMIN')")
