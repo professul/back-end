@@ -127,7 +127,7 @@ public class ReportProcessingTest {
         Long userId = 1L;
         User inactiveUser = new User(userId, "test@example.com", "Test User", "password", Status.SUSPENDED, UserRole.ROLE_USER);
 
-        when(userRepository.findByUserId(userId)).thenReturn(inactiveUser);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(inactiveUser));
 
         // When
         userService.activateUser(userId);
@@ -142,11 +142,10 @@ public class ReportProcessingTest {
     void activateUser_UserNotFound() {
         // Given
         Long userId = 2L;
-
-        when(userRepository.findByUserId(userId)).thenReturn(null);
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(UserNotFoundException.class, () -> userService.activateUser(userId));
+        assertThrows(UsernameNotFoundException.class, () -> userService.activateUser(userId));
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -157,7 +156,7 @@ public class ReportProcessingTest {
         Long userId = 1L;
         User activeUser = new User(userId, "test@example.com", "Test User", "password", Status.ACTIVE, UserRole.ROLE_USER);
 
-        when(userRepository.findByUserId(userId)).thenReturn(activeUser);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(activeUser));
 
         // When & Then
         assertThrows(IllegalStateException.class, () -> userService.activateUser(userId));

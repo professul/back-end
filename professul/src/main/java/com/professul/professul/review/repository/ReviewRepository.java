@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 @Repository
@@ -20,4 +21,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     int countByProfId(@Param("profId") int profId);
 
     List<Review> findByProfId(@Param("profId") int profId);
+
 }
