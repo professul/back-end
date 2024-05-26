@@ -7,14 +7,13 @@ import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.domain.user.repository.UserRepository;
 import com.professul.professul.exception.EmailAlreadyExistsException;
-import com.professul.professul.exception.UnauthorizedAccessException;
+import com.professul.professul.exception.UserActivationException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.exception.UserNotFoundException;
 import com.professul.professul.review.entity.Review;
 import com.professul.professul.review.repository.ReviewRepository;
 import com.professul.professul.util.PageInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import static com.professul.professul.domain.user.entity.Status.CANCELED;
 
 @Slf4j
 @Service
@@ -132,8 +129,26 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void activateUser(Long userId) throws Exception {
+        User user = userRepository.findByUserId(userId);
+
+        if (user == null) {
+            throw new UserNotFoundException("이 아이디를 찾지 못했습니다 " + userId);
+        }
+
+        if (user.getStatus() == Status.ACTIVE) {
+            throw new IllegalStateException("이미 활성화된 사용자입니다");
+        }
+
+        try {
+            user.activate();
+            userRepository.save(user);
+        } catch (Exception e) {
+            // 예외 처리
+            throw new UserActivationException("유저 활성화 실패: " + userId, e);
+        }
 
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @Override
@@ -154,11 +169,10 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Transactional
     @Override
     public void withdrawUser(Long userId) { //사용자 탈퇴
-        User user = userRepository.findById(userId).orElseThrow(()-> new UsernameNotFoundException("사용자를 찾을 수 없습니다"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다"));
         if (user == null) {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
         }

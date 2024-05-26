@@ -4,6 +4,7 @@ import com.professul.professul.domain.user.entity.Status;
 import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.domain.user.repository.UserRepository;
+import com.professul.professul.exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -120,10 +121,47 @@ public class ReportProcessingTest {
     }
 
     @Test
-    @DisplayName("사용자 사면 성공")
-    void activateUser(){
-        //Given
-        Long userId=1L;
+    @DisplayName("사용자 활성화 성공")
+    void activateUser() throws Exception {
+        // Given
+        Long userId = 1L;
+        User inactiveUser = new User(userId, "test@example.com", "Test User", "password", Status.SUSPENDED, UserRole.ROLE_USER);
+
+        when(userRepository.findByUserId(userId)).thenReturn(inactiveUser);
+
+        // When
+        userService.activateUser(userId);
+
+        // Then
+        assertEquals(Status.ACTIVE, inactiveUser.getStatus());
+        verify(userRepository, times(1)).save(inactiveUser);
+    }
+
+    @Test
+    @DisplayName("사용자 활성화 실패 - 사용자 없음")
+    void activateUser_UserNotFound() {
+        // Given
+        Long userId = 2L;
+
+        when(userRepository.findByUserId(userId)).thenReturn(null);
+
+        // When & Then
+        assertThrows(UserNotFoundException.class, () -> userService.activateUser(userId));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("사용자 활성화 실패 - 이미 활성화된 사용자")
+    void activateUser_UserAlreadyActive() {
+        // Given
+        Long userId = 1L;
+        User activeUser = new User(userId, "test@example.com", "Test User", "password", Status.ACTIVE, UserRole.ROLE_USER);
+
+        when(userRepository.findByUserId(userId)).thenReturn(activeUser);
+
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> userService.activateUser(userId));
+        verify(userRepository, never()).save(any(User.class));
     }
 
 
