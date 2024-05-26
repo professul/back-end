@@ -54,7 +54,6 @@ public class UserController {
 
     @PostMapping("/user/checkPassword") //비밀번호 확인
     public ResponseEntity<?> checkPassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody CheckPasswordDto checkPasswordDto) {
-        log.info("비밀번호 확인 진입");
         Long userId = principalUserDetails.getUserId();
         boolean match = userService.checkPassword(userId, checkPasswordDto.getPassword());
         if (match) {
@@ -64,59 +63,59 @@ public class UserController {
         }
     }
 
-
     @PatchMapping("/user/modify")
-    public ResponseEntity<Object> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Long userId = principalUserDetails.getUserId(); //유저아이디를 가져옴
+    public ResponseEntity<?> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto) {
+        Long userId = principalUserDetails.getUserId();
         try {
-            User user = userService.findUserById(userId);
-            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(null);
-
-            if (modifyUserDto.getName() != null && !modifyUserDto.getName().isEmpty()) {
-                user = userService.modifyUserName(userId, modifyUserDto.getName());
-                responseDto.setName(user.getName());
-            }
-
+            userService.modifyUserName(userId, modifyUserDto.getName());
+            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(modifyUserDto.getName());
             return ResponseEntity.ok(responseDto);
-        } catch (UserModificationException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
         }
-
     }
 
 
     @PutMapping("/user/change-password")
     public ResponseEntity<?> changePassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request, HttpServletResponse response) {
-        Long userId = principalUserDetails.getUserId(); //유저아이디를 가져옴
+        Long userId = principalUserDetails.getUserId();
         try {
             userService.modifyUserPassword(userId, changePasswordDto);
             tokenService.reissueToken(request, response);
             return ResponseEntity.ok().body("비밀번호가 변경되었습니다");
         } catch (Exception e) {
+            log.error("비밀번호 변경 중 오류 발생: {}", e.getMessage());
             return ResponseEntity.badRequest().body("비밀번호 변경 중 오류가 발생했습니다.");
         }
     }
 
 
-
     @PostMapping("/user/delete/{userId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> withdrawUser(@PathVariable Long userId) throws Exception {
+    public ResponseEntity<?> withdrawUser(@PathVariable Long userId) {
         log.info("회원탈퇴 요청: {}", userId);
-        userService.withdrawUser(userId);
-        return ResponseEntity.ok().build();
+        try {
+            userService.withdrawUser(userId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("회원탈퇴 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원탈퇴 중 오류가 발생했습니다.");
+        }
     }
 
-    @PostMapping("/admin/user/suspend/{userId}")
+
+    @PostMapping("/admin/suspend/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> suspendUser(@PathVariable Long userId, @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) throws Exception{
-        log.info("회원 정지 요청: {}, 정지 기간: {}", userId, until);
-        userService.suspendUser(userId, until);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> suspendUser(@PathVariable Long userId, @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) {
+        try {
+            userService.suspendUser(userId, until);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("회원 정지 중 오류가 발생했습니다."));
+        }
     }
 
-
-    @PostMapping("/admin/user/ban/{userId}")
+    @PostMapping("/admin/ban/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> banUser(@PathVariable Long userId, @RequestParam("reason") String reason) throws Exception{
         log.info("회원 차단 요청: {}, 사유: {}", userId, reason);
@@ -125,7 +124,7 @@ public class UserController {
             return ResponseEntity.ok().build();
         }catch (UsernameNotFoundException e){
             log.error("사용자 찾기 실패: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
         }catch (Exception e){
             log.error("회원 차단 중 오류 발생",e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

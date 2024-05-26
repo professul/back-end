@@ -3,7 +3,6 @@ package com.professul.professul.domain.user.service;
 import com.professul.professul.domain.user.dto.ChangePasswordDto;
 import com.professul.professul.domain.user.dto.JoinDTO;
 import com.professul.professul.domain.user.entity.User;
-import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.review.entity.Review;
 import com.professul.professul.util.PageInfo;
 
@@ -14,7 +13,7 @@ public interface UserService {
 
     void joinProcess(JoinDTO joinDTO) throws Exception;
 
-    User modifyUserName(Long userId, String newName) throws Exception;
+    void modifyUserName(Long userId, String newName) throws Exception;
 
     void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) throws Exception;
 
@@ -28,7 +27,5 @@ public interface UserService {
     void banUser(Long userId, String reason) throws Exception;
 
     void withdrawUser(Long userId) throws Exception;
-
-    List<Review> getReviewListByUser(Long userId, PageInfo pageInfo) throws Exception;
 
 }

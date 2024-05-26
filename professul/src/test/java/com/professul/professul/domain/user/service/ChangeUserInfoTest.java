@@ -11,7 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,7 +43,7 @@ class ChangeUserInfoTest {
 
         User user = new User(userId, "test@example.com", "Old Name", "password", Status.ACTIVE, UserRole.ROLE_USER);
 
-        when(userRepository.findByUserId(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // When
         userService.modifyUserName(userId, newName);
@@ -58,10 +61,33 @@ class ChangeUserInfoTest {
         Long userId = 2L;
         String newName = "New Name";
 
-        when(userRepository.findByUserId(userId)).thenReturn(null);
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(UserModificationException.class, () -> userService.modifyUserName(userId, newName));
+        assertThrows(UsernameNotFoundException.class, () -> userService.modifyUserName(userId, newName));
     }
-}
+
+    @Test
+    @DisplayName("오류났을때")
+    void modifyUserNameError(){
+        //Given
+        Long userId= 1L;
+        String newName= "New Name";
+
+        User user = new User(userId, "test@example.com", "Old Name", "password", Status.ACTIVE, UserRole.ROLE_USER);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("데이터베이스 오류"));
+        // When & Then
+        assertThrows(UserModificationException.class, () -> {
+            userService.modifyUserName(userId, newName);
+        });
+
+        // userRepository.findById가 호출되었는지 확인
+        verify(userRepository).findById(userId);
+        // userRepository.save가 호출되었는지 확인
+        verify(userRepository).save(any(User.class));
+    }
+
+
+    }
 

@@ -12,7 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -45,7 +48,7 @@ class ModifyUserPasswordTest {
         User user = new User(userId, "test@example.com", "Test User", currentPassword, Status.ACTIVE, UserRole.ROLE_USER);
 
         // Mock 설정
-        when(userRepository.findByUserId(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(bCryptPasswordEncoder.matches(currentPassword, user.getPassword())).thenReturn(true);
         when(bCryptPasswordEncoder.matches(newPassword, user.getPassword())).thenReturn(false);
         when(bCryptPasswordEncoder.encode(newPassword)).thenReturn("newEncryptedPassword");
@@ -65,9 +68,9 @@ class ModifyUserPasswordTest {
         Long userId= 1L;
         ChangePasswordDto changePasswordDto = new ChangePasswordDto("currentPassword", "newPassword", "confirmPassword");
 
-        when(userRepository.findByUserId(userId)).thenReturn(null);
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
         // When & Then
-        assertThrows(UserModificationException.class, () -> userService.modifyUserPassword(userId, changePasswordDto));
+        assertThrows(UsernameNotFoundException.class, () -> userService.modifyUserPassword(userId, changePasswordDto));
 
     }
 
@@ -79,7 +82,7 @@ class ModifyUserPasswordTest {
         ChangePasswordDto changePasswordDto = new ChangePasswordDto("wrongCurrentPassword", "newPassword", "confirmPassword");
         User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, UserRole.ROLE_USER);
 
-        when(userRepository.findByUserId(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(bCryptPasswordEncoder.matches("wrongCurrentPassword", user.getPassword())).thenReturn(false);
 
         // When & Then
@@ -95,7 +98,7 @@ class ModifyUserPasswordTest {
         ChangePasswordDto changePasswordDto = new ChangePasswordDto("currentPassword", "samePassword", "confirmPassword");
         User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, UserRole.ROLE_USER);
 
-        when(userRepository.findByUserId(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(bCryptPasswordEncoder.matches("currentPassword", user.getPassword())).thenReturn(true);
         when(bCryptPasswordEncoder.matches("samePassword", user.getPassword())).thenReturn(true);
 
@@ -111,7 +114,7 @@ class ModifyUserPasswordTest {
         ChangePasswordDto changePasswordDto = new ChangePasswordDto("currentPassword", "newPassword", "differentConfirmPassword");
         User user = new User(userId, "test@example.com", "Test User", "encryptedPassword", Status.ACTIVE, UserRole.ROLE_USER);
 
-        when(userRepository.findByUserId(userId)).thenReturn(user);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(bCryptPasswordEncoder.matches("currentPassword", user.getPassword())).thenReturn(true);
         when(bCryptPasswordEncoder.matches("newPassword", user.getPassword())).thenReturn(false);
 
