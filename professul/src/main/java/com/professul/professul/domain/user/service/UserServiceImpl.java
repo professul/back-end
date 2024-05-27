@@ -23,10 +23,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
+
+
+    private static final String USER_NOT_FOUND_MESSAGE = "사용자를 찾을 수 없습니다. ID: %s";
+    private static final String PASSWORD_MISMATCH_MESSAGE = "현재 비밀번호가 일치하지 않습니다.";
+    private static final String NEW_PASSWORD_SAME_AS_CURRENT_MESSAGE = "새 비밀번호는 기존의 비밀번호와 같을 수 없습니다.";
+    private static final String PASSWORD_MISMATCH_CONFIRM_MESSAGE = "비밀번호가 일치하지 않습니다.";
+    private static final String USER_MODIFICATION_ERROR_MESSAGE = "사용자 정보를 수정하는 과정에서 오류가 발생했습니다.";
+    private static final String ALREADY_ACTIVATED_MESSAGE = "이미 활성화된 사용자입니다.";
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -43,10 +52,7 @@ public class UserServiceImpl implements UserService {
         String email = joinDTO.getEmail();
         String name = joinDTO.getName();
 
-        log.info("회원가입 요청 - 이메일: {}, 이름: {}", email, name);
-
         if (userRepository.existsByEmail(email)) {
-            log.info("중복된 이메일입니다. 이메일: {}", email);
             throw new EmailAlreadyExistsException("중복된 이메일입니다.");
         }
 
@@ -58,63 +64,66 @@ public class UserServiceImpl implements UserService {
         log.info("회원가입 완료 - 이메일: {}", email);
     }
 
-    private User getUserById(Long userId){
-        return userRepository.findById(userId).orElseThrow(()-> new UsernameNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId));
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
 
-    private void saveUser(User user, String errorMessage) {
+    private void saveUser(User user) {
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            throw new UserModificationException(errorMessage, e);
+            throw new UserModificationException(USER_MODIFICATION_ERROR_MESSAGE, e);
         }
     }
 
-    @Override
+
     @Transactional
+    @Override
     public void modifyUserName(Long userId, String newName) {
         User user = getUserById(userId);
         user.changeName(newName);
-        saveUser(user, "사용자 이름을 수정하는 과정에서 오류가 발생했습니다");
+        saveUser(user);
     }
+
 
     @Transactional
     @Override
-    public void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) throws UserModificationException {
+    public void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) {
         User user = getUserById(userId);
+        validatePasswordChange(user, changePasswordDto);
+        user.changePassword(changePasswordDto.getNewPassword(), bCryptPasswordEncoder);
+        saveUser(user);
+    }
 
+    private void validatePasswordChange(User user, ChangePasswordDto changePasswordDto) {
         if (!bCryptPasswordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
-            throw new UserModificationException("현재 비밀번호가 일치하지 않습니다.");
+            throw new UserModificationException(PASSWORD_MISMATCH_MESSAGE);
         }
 
         if (bCryptPasswordEncoder.matches(changePasswordDto.getNewPassword(), user.getPassword())) {
-            throw new UserModificationException("새 비밀번호는 기존의 비밀번호와 같을 수 없습니다.");
+            throw new UserModificationException(NEW_PASSWORD_SAME_AS_CURRENT_MESSAGE);
         }
 
         if (!changePasswordDto.getNewPassword().equals(changePasswordDto.getConfirmPassword())) {
-            throw new UserModificationException("비밀번호가 일치하지 않습니다.");
+            throw new UserModificationException(PASSWORD_MISMATCH_CONFIRM_MESSAGE);
         }
-
-        user.changePassword(changePasswordDto.getNewPassword(), bCryptPasswordEncoder);
-        saveUser(user, "사용자 비밀번호를 수정하는 과정에서 오류가 발생했습니다");
     }
+
 
     @Transactional
     @Override
     public User findUserById(Long userId) throws UserNotFoundException {
-        User user = userRepository.findByUserId(userId);
-        if (user == null) {
-            throw new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + userId);
-        }
-        return user;
+        return Optional.ofNullable(userRepository.findByUserId(userId))
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
-
 
     @Override
     public Boolean checkPassword(Long userId, String password) {
         User user = userRepository.findByUserId(userId);
-        return bCryptPasswordEncoder.matches(password, user.getPassword());
+        return user != null && bCryptPasswordEncoder.matches(password, user.getPassword());
     }
+
 
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -123,19 +132,19 @@ public class UserServiceImpl implements UserService {
     public void activateUser(Long userId) throws Exception {
         User user = getUserById(userId);
         if (user.getStatus() == Status.ACTIVE) {
-            throw new IllegalStateException("이미 활성화된 사용자입니다.");
+            throw new IllegalStateException(ALREADY_ACTIVATED_MESSAGE);
         }
         user.activate();
-        saveUser(user, "유저 활성화 실패: " + userId);
+        saveUser(user);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @Override
-    public void suspendUser(Long userId, LocalDate until) throws Exception {
+    public void suspendUser(Long userId, LocalDate until){
         User user = getUserById(userId);
         user.suspend(until);
-        saveUser(user, "유저 정지 실패: " + userId);
+        saveUser(user);
     }
 
 
@@ -145,7 +154,7 @@ public class UserServiceImpl implements UserService {
     public void banUser(Long userId, String reason) {
         User user = getUserById(userId);
         user.ban(reason);
-        saveUser(user, "유저 차단 실패: " + userId);
+        saveUser(user);
     }
 
 
@@ -154,7 +163,7 @@ public class UserServiceImpl implements UserService {
     public void withdrawUser(Long userId) { //사용자 탈퇴
         User user = getUserById(userId);
         user.withdraw();
-        saveUser(user, "사용자 탈퇴 중 오류가 발생했습니다");
+        saveUser(user);
     }
 
 }
