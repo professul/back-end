@@ -10,12 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class ReissueController {
-    private final JWTUtil jwtUtil;
     private final TokenService tokenService;
 
 
-    public ReissueController(JWTUtil jwtUtil,TokenService tokenService) {
-        this.jwtUtil = jwtUtil;
+    public ReissueController(TokenService tokenService) {
         this.tokenService=tokenService;
     }
 
