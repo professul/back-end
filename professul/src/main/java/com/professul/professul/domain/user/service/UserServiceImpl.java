@@ -69,6 +69,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
 
+
     private void saveUser(User user) {
         try {
             userRepository.save(user);
@@ -84,6 +85,7 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(userId);
         user.changeName(newName);
         saveUser(user);
+        log.info("사용자 이름 변경 완료 - 사용자 ID: {}", userId);
     }
 
 
@@ -94,6 +96,7 @@ public class UserServiceImpl implements UserService {
         validatePasswordChange(user, changePasswordDto);
         user.changePassword(changePasswordDto.getNewPassword(), bCryptPasswordEncoder);
         saveUser(user);
+        log.info("비밀번호 변경 완료 - 사용자 ID: {}", userId);
     }
 
     private void validatePasswordChange(User user, ChangePasswordDto changePasswordDto) {
@@ -113,15 +116,15 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User findUserById(Long userId) throws UserNotFoundException {
+    public User findUserById(Long userId) {
         return Optional.ofNullable(userRepository.findByUserId(userId))
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
 
     @Override
     public Boolean checkPassword(Long userId, String password) {
-        User user = userRepository.findByUserId(userId);
-        return user != null && bCryptPasswordEncoder.matches(password, user.getPassword());
+        User user = getUserById(userId);
+        return bCryptPasswordEncoder.matches(password, user.getPassword());
     }
 
 
@@ -129,13 +132,15 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @Override
-    public void activateUser(Long userId) throws Exception {
+    public void activateUser(Long userId) {
         User user = getUserById(userId);
         if (user.getStatus() == Status.ACTIVE) {
             throw new IllegalStateException(ALREADY_ACTIVATED_MESSAGE);
         }
         user.activate();
         saveUser(user);
+        log.info("사용자 활성화 - 사용자 ID: {}", userId);
+
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -145,6 +150,8 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(userId);
         user.suspend(until);
         saveUser(user);
+        log.info("사용자 정지 - 사용자 ID: {}, 정지 기간: {}", userId, until);
+
     }
 
 
@@ -155,6 +162,7 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(userId);
         user.ban(reason);
         saveUser(user);
+        log.info("사용자 차단 - 사용자 ID: {}, 사유: {}", userId, reason);
     }
 
 
@@ -164,6 +172,7 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(userId);
         user.withdraw();
         saveUser(user);
+        log.info("사용자 탈퇴 - 사용자 ID: {}", userId);
     }
 
 }

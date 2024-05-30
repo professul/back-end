@@ -41,15 +41,9 @@ public class UserController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<String> joinProcess(@RequestBody JoinDTO joinDTO) {
-        try {
-            userService.joinProcess(joinDTO);
-            return ResponseEntity.ok("회원가입 성공");
-        } catch (EmailAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 이메일입니다");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버오류발생");
-        }
+    public ResponseEntity<String> joinProcess(@RequestBody JoinDTO joinDTO) throws Exception {
+        userService.joinProcess(joinDTO);
+        return ResponseEntity.ok("회원가입 성공");
     }
 
     @PostMapping("/user/checkPassword") //비밀번호 확인
@@ -77,16 +71,11 @@ public class UserController {
 
 
     @PutMapping("/user/change-password")
-    public ResponseEntity<?> changePassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<String> changePassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Long userId = principalUserDetails.getUserId();
-        try {
-            userService.modifyUserPassword(userId, changePasswordDto);
-            tokenService.reissueToken(request, response);
-            return ResponseEntity.ok().body("비밀번호가 변경되었습니다");
-        } catch (Exception e) {
-            log.error("비밀번호 변경 중 오류 발생: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("비밀번호 변경 중 오류가 발생했습니다.");
-        }
+        userService.modifyUserPassword(userId, changePasswordDto);
+        tokenService.reissueToken(request, response);
+        return ResponseEntity.ok("비밀번호가 변경되었습니다");
     }
 
 
