@@ -9,12 +9,7 @@ import com.professul.professul.domain.user.repository.UserRepository;
 import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.exception.UserNotFoundException;
-import com.professul.professul.review.entity.Review;
-import com.professul.professul.review.repository.ReviewRepository;
-import com.professul.professul.util.PageInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -48,7 +42,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void joinProcess(JoinDTO joinDTO) { //회원가입
+    public void joinProcess(JoinDTO joinDTO) throws EmailAlreadyExistsException { //회원가입
         String email = joinDTO.getEmail();
         String name = joinDTO.getName();
 
@@ -64,13 +58,13 @@ public class UserServiceImpl implements UserService {
         log.info("회원가입 완료 - 이메일: {}", email);
     }
 
-    private User getUserById(Long userId) {
+    private User getUserById(Long userId) throws UserNotFoundException {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
 
 
-    private void saveUser(User user) {
+    private void saveUser(User user) throws UserModificationException {
         try {
             userRepository.save(user);
         } catch (Exception e) {
@@ -81,7 +75,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void modifyUserName(Long userId, String newName) {
+    public void modifyUserName(Long userId, String newName) throws UserNotFoundException, UserModificationException{
         User user = getUserById(userId);
         user.changeName(newName);
         saveUser(user);
@@ -91,7 +85,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) {
+    public void modifyUserPassword(Long userId, ChangePasswordDto changePasswordDto) throws UserNotFoundException, UserModificationException {
         User user = getUserById(userId);
         validatePasswordChange(user, changePasswordDto);
         user.changePassword(changePasswordDto.getNewPassword(), bCryptPasswordEncoder);
@@ -99,7 +93,7 @@ public class UserServiceImpl implements UserService {
         log.info("비밀번호 변경 완료 - 사용자 ID: {}", userId);
     }
 
-    private void validatePasswordChange(User user, ChangePasswordDto changePasswordDto) {
+    private void validatePasswordChange(User user, ChangePasswordDto changePasswordDto) throws UserModificationException {
         if (!bCryptPasswordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
             throw new UserModificationException(PASSWORD_MISMATCH_MESSAGE);
         }
@@ -116,7 +110,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User findUserById(Long userId) {
+    public User findUserById(Long userId) throws UserNotFoundException {
         return Optional.ofNullable(userRepository.findByUserId(userId))
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
@@ -124,7 +118,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean checkPassword(Long userId, String password) {
         User user = getUserById(userId);
-        return bCryptPasswordEncoder.matches(password, user.getPassword());
+        return user!=null && bCryptPasswordEncoder.matches(password, user.getPassword());
     }
 
 
@@ -168,7 +162,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void withdrawUser(Long userId) { //사용자 탈퇴
+    public void withdrawUser(Long userId) throws UserNotFoundException, UserModificationException { //사용자 탈퇴
         User user = getUserById(userId);
         user.withdraw();
         saveUser(user);
