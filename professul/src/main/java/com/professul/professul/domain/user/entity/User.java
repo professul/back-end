@@ -93,7 +93,7 @@ public class User {
     }
 
     public void withdraw() {
-        if(this.status!=Status.CANCELED){
+        if(this.status==Status.CANCELED){
             throw new IllegalStateException("이미 탈퇴한 회원입니다");
         }
         this.status=Status.CANCELED;
