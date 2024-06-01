@@ -42,21 +42,22 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void joinProcess(JoinDTO joinDTO) throws EmailAlreadyExistsException { //회원가입
-        String email = joinDTO.getEmail();
-        String name = joinDTO.getName();
-
-        if (userRepository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException("중복된 이메일입니다.");
-        }
-
+    public void joinProcess(JoinDTO joinDTO) throws EmailAlreadyExistsException {
+        validateJoinRequest(joinDTO);
         String encryptedPassword = bCryptPasswordEncoder.encode(joinDTO.getPassword());
 
-        User newUser = new User(null, email, name, encryptedPassword, Status.ACTIVE, UserRole.ROLE_USER);
+        User newUser = new User(null, joinDTO.getEmail(), joinDTO.getName(), encryptedPassword, Status.ACTIVE, UserRole.ROLE_USER);
         userRepository.save(newUser);
 
-        log.info("회원가입 완료 - 이메일: {}", email);
+        log.info("회원가입 완료 - 이메일: {}", joinDTO.getEmail());
     }
+
+    private void validateJoinRequest(JoinDTO joinDTO) {
+        if (userRepository.existsByEmail(joinDTO.getEmail())) {
+            throw new EmailAlreadyExistsException("중복된 이메일입니다");
+        }
+    }
+
 
     private User getUserById(Long userId) throws UserNotFoundException {
         return userRepository.findById(userId)
@@ -75,7 +76,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void modifyUserName(Long userId, String newName) throws UserNotFoundException, UserModificationException{
+    public void modifyUserName(Long userId, String newName) throws UserNotFoundException, UserModificationException {
         User user = getUserById(userId);
         user.changeName(newName);
         saveUser(user);
@@ -118,9 +119,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean checkPassword(Long userId, String password) {
         User user = getUserById(userId);
-        return user!=null && bCryptPasswordEncoder.matches(password, user.getPassword());
+        return user != null && bCryptPasswordEncoder.matches(password, user.getPassword());
     }
-
 
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @Override
-    public void suspendUser(Long userId, LocalDate until){
+    public void suspendUser(Long userId, LocalDate until) {
         User user = getUserById(userId);
         user.suspend(until);
         saveUser(user);
