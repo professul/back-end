@@ -1,13 +1,10 @@
 package com.professul.professul.domain.user.controller;
 
 import com.professul.professul.domain.user.dto.*;
-import com.professul.professul.domain.user.entity.UserRole;
-import com.professul.professul.dto.*;
-import com.professul.professul.domain.user.entity.User;
-import com.professul.professul.exception.EmailAlreadyExistsException;
-import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.domain.user.service.UserService;
-import com.professul.professul.domain.user.dto.JoinDTO;
+import com.professul.professul.dto.ErrorResponse;
+import com.professul.professul.exception.UserModificationException;
+import com.professul.professul.exception.UserNotFoundException;
 import com.professul.professul.global.auth.service.TokenService;
 import com.professul.professul.global.auth.userDetails.PrincipalUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,10 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -58,15 +53,11 @@ public class UserController {
     }
 
     @PatchMapping("/user/modify")
-    public ResponseEntity<?> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto) {
+    public ResponseEntity<?> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto) throws Exception {
         Long userId = principalUserDetails.getUserId();
-        try {
-            userService.modifyUserName(userId, modifyUserDto.getName());
-            ModifyUserResponseDto responseDto = new ModifyUserResponseDto(modifyUserDto.getName());
-            return ResponseEntity.ok(responseDto);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
-        }
+        userService.modifyUserName(userId, modifyUserDto.getName());
+        ModifyUserResponseDto responseDto = new ModifyUserResponseDto(modifyUserDto.getName());
+        return ResponseEntity.ok(responseDto);
     }
 
 
@@ -86,9 +77,15 @@ public class UserController {
         try {
             userService.withdrawUser(userId);
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
+        } catch (UserNotFoundException e) {
+            log.error("사용자 찾기 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+        } catch (UserModificationException e) {
             log.error("회원탈퇴 중 오류 발생: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원탈퇴 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원탈퇴 중 오류가 발생했습니다.");
+        } catch (Exception e) {
+            log.error("알 수 없는 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
         }
     }
 
