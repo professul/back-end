@@ -3,6 +3,7 @@ package com.professul.professul.domain.user.controller;
 import com.professul.professul.domain.user.dto.*;
 import com.professul.professul.domain.user.service.UserService;
 import com.professul.professul.dto.ErrorResponse;
+import com.professul.professul.exception.EmailAlreadyExistsException;
 import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.exception.UserNotFoundException;
 import com.professul.professul.global.auth.service.TokenService;
@@ -36,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<String> joinProcess(@RequestBody JoinDTO joinDTO) throws Exception {
+    public ResponseEntity<String> joinProcess(@RequestBody JoinDTO joinDTO) throws EmailAlreadyExistsException {
         userService.joinProcess(joinDTO);
         return ResponseEntity.ok("회원가입 성공");
     }
@@ -53,7 +54,7 @@ public class UserController {
     }
 
     @PatchMapping("/user/modify")
-    public ResponseEntity<?> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto) throws Exception {
+    public ResponseEntity<?> modifyUser(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ModifyUserDto modifyUserDto) throws UserNotFoundException, UserModificationException {
         Long userId = principalUserDetails.getUserId();
         userService.modifyUserName(userId, modifyUserDto.getName());
         ModifyUserResponseDto responseDto = new ModifyUserResponseDto(modifyUserDto.getName());
@@ -62,7 +63,7 @@ public class UserController {
 
 
     @PutMapping("/user/change-password")
-    public ResponseEntity<String> changePassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public ResponseEntity<String> changePassword(@AuthenticationPrincipal PrincipalUserDetails principalUserDetails, @RequestBody ChangePasswordDto changePasswordDto, HttpServletRequest request, HttpServletResponse response) throws UserNotFoundException, UserModificationException {
         Long userId = principalUserDetails.getUserId();
         userService.modifyUserPassword(userId, changePasswordDto);
         tokenService.reissueToken(request, response);

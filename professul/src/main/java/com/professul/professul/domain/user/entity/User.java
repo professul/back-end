@@ -2,13 +2,14 @@ package com.professul.professul.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
-
+@Slf4j
 @Entity
 @Table(name="users")
 @Getter
@@ -44,7 +45,6 @@ public class User {
     private String banReason;
 
 
-
     // 생성자 정의
     public User(Long userId,String email, String name, String password, Status status, UserRole role) {
         this.userId=userId;
@@ -56,30 +56,59 @@ public class User {
     }
 
     public void changeName(String newName){
+        if (newName == null || newName.isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
         this.name=newName;
         this.editDate=new Timestamp(System.currentTimeMillis());
+        log.info("User name changed to {}", newName);
+
     }
 
     //비밀번호 변경 메서드
     public void changePassword(String newPassword, PasswordEncoder passwordEncoder){
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new IllegalArgumentException("New password cannot be null or empty");
+        }
         this.password=passwordEncoder.encode(newPassword);
+        log.info("User {} password changed", userId);
     }
 
     public void suspend(LocalDate until){
+        if (until == null || until.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Suspend date must be in the future");
+        }
+        if (this.status != Status.ACTIVE) {
+            throw new IllegalStateException("Only active users can be suspended");
+        }
         this.status=Status.SUSPENDED;
         this.suspendUntil=until;
+        log.info("User {} suspended until {}", userId, until);
     }
 
     public void ban(String reason){
+        if (reason == null || reason.isEmpty()) {
+            throw new IllegalArgumentException("Ban reason cannot be null or empty");
+        }
         this.status=Status.BANNED;
         this.banReason=reason;
+        log.info("User {} banned for reason: {}", userId, reason);
     }
 
-    public void withdraw(){
+    public void withdraw() {
+        if(this.status==Status.CANCELED){
+            throw new IllegalStateException("이미 탈퇴한 회원입니다");
+        }
         this.status=Status.CANCELED;
+        log.info("User {} withdrawn", userId);
     }
 
-    public void activate(){
-        this.status=Status.ACTIVE;
+    public void activate() {
+        if (this.status != Status.SUSPENDED) {
+            throw new IllegalStateException("Only suspended users can be activated");
+        }
+        this.status = Status.ACTIVE;
+        this.suspendUntil = null;
+        log.info("User {} activated", userId);
     }
 }
