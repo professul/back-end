@@ -71,6 +71,7 @@ public class User {
             throw new IllegalArgumentException("New password cannot be null or empty");
         }
         this.password=passwordEncoder.encode(newPassword);
+        log.info("User {} password changed", userId);
     }
 
     public void suspend(LocalDate until){
@@ -82,6 +83,7 @@ public class User {
         }
         this.status=Status.SUSPENDED;
         this.suspendUntil=until;
+        log.info("User {} suspended until {}", userId, until);
     }
 
     public void ban(String reason){
@@ -90,6 +92,7 @@ public class User {
         }
         this.status=Status.BANNED;
         this.banReason=reason;
+        log.info("User {} banned for reason: {}", userId, reason);
     }
 
     public void withdraw() {
@@ -97,7 +100,7 @@ public class User {
             throw new IllegalStateException("이미 탈퇴한 회원입니다");
         }
         this.status=Status.CANCELED;
-        log.info("탈퇴");
+        log.info("User {} withdrawn", userId);
     }
 
     public void activate() {
@@ -106,6 +109,6 @@ public class User {
         }
         this.status = Status.ACTIVE;
         this.suspendUntil = null;
-        log.info("User activated");
+        log.info("User {} activated", userId);
     }
 }
