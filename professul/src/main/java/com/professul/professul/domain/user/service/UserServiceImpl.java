@@ -11,6 +11,7 @@ import com.professul.professul.exception.UserModificationException;
 import com.professul.professul.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -112,8 +113,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User findUserById(Long userId) throws UserNotFoundException {
-        return Optional.ofNullable(userRepository.findByUserId(userId))
-                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+//        return Optional.ofNullable(userRepository.findByUserId(userId))
+//                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+        return userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
 
     @Override
@@ -168,5 +170,13 @@ public class UserServiceImpl implements UserService {
         saveUser(user);
         log.info("사용자 탈퇴 - 사용자 ID: {}", userId);
     }
+
+//    private void changeUserStatus(Long userId, Status status, String alreadyActivatedMessage){
+//        User user=getUserById(userId);
+//        if(user.getStatus()==status) {
+//            throw new IllegalStateException(alreadyActivatedMessage);
+//        }
+//        user.set
+//    }
 
 }

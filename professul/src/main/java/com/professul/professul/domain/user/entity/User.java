@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.Timestamp;
@@ -111,4 +112,24 @@ public class User {
         this.suspendUntil = null;
         log.info("User {} activated", userId);
     }
+
+    private void validateNotEmpty(String value, String errorMessage){
+        if(value==null || value.isEmpty()){
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
+
+    private void validateFutureDate(LocalDate date, String errorMessage){
+        if(date == null || date.isBefore(LocalDate.now())){
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
+
+    private void validateStatus(Status reqstatus, String errorMessage){
+        if(this.status!=reqstatus){
+            throw new IllegalStateException(errorMessage);
+        }
+    }
+
+
 }
