@@ -118,25 +118,25 @@ public class UserController {
         }
     }
 
-    @GetMapping("/user/info")
-    public ResponseEntity<UserInfoResponse> getUserInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            log.info("Authentication 객체: {}", authentication);
-            Object principal = authentication.getPrincipal();
-            log.info("Principal 객체: {}", principal);
-            if (principal instanceof PrincipalUserDetails) {
-                PrincipalUserDetails userDetails = (PrincipalUserDetails) principal;
-                UserInfoResponse userInfoResponse = new UserInfoResponse(userDetails.getUserName(), userDetails.getUserId());
-                return ResponseEntity.ok(userInfoResponse);
-            } else {
-                log.info("Principal이 PrincipalUserDetails 인스턴스가 아님");
-            }
-        } else {
-            log.info("Authentication 객체가 null");
-        }
-        return ResponseEntity.badRequest().body(null);
-    }
+//    @GetMapping("/user/info")
+//    public ResponseEntity<UserInfoResponse> getUserInfo() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication != null) {
+//            log.info("Authentication 객체: {}", authentication);
+//            Object principal = authentication.getPrincipal();
+//            log.info("Principal 객체: {}", principal);
+//            if (principal instanceof PrincipalUserDetails) {
+//                PrincipalUserDetails userDetails = (PrincipalUserDetails) principal;
+//                UserInfoResponse userInfoResponse = new UserInfoResponse(userDetails.getUserName(), userDetails.getUserId());
+//                return ResponseEntity.ok(userInfoResponse);
+//            } else {
+//                log.info("Principal이 PrincipalUserDetails 인스턴스가 아님");
+//            }
+//        } else {
+//            log.info("Authentication 객체가 null");
+//        }
+//        return ResponseEntity.badRequest().body(null);
+//    }
 
 
 
