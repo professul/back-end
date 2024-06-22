@@ -6,19 +6,15 @@ import com.professul.professul.domain.user.entity.Status;
 import com.professul.professul.domain.user.entity.User;
 import com.professul.professul.domain.user.entity.UserRole;
 import com.professul.professul.domain.user.repository.UserRepository;
-import com.professul.professul.exception.EmailAlreadyExistsException;
-import com.professul.professul.exception.UserModificationException;
-import com.professul.professul.exception.UserNotFoundException;
+import com.professul.professul.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -55,7 +51,7 @@ public class UserServiceImpl implements UserService {
 
     private void validateJoinRequest(JoinDTO joinDTO) {
         if (userRepository.existsByEmail(joinDTO.getEmail())) {
-            throw new EmailAlreadyExistsException("중복된 이메일입니다");
+            throw new DuplicateEmailException("중복된 이메일입니다");
         }
     }
 
@@ -97,15 +93,15 @@ public class UserServiceImpl implements UserService {
 
     private void validatePasswordChange(User user, ChangePasswordDto changePasswordDto) throws UserModificationException {
         if (!bCryptPasswordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
-            throw new UserModificationException(PASSWORD_MISMATCH_MESSAGE);
+            throw new PasswordMismatchException(PASSWORD_MISMATCH_MESSAGE);
         }
 
         if (bCryptPasswordEncoder.matches(changePasswordDto.getNewPassword(), user.getPassword())) {
-            throw new UserModificationException(NEW_PASSWORD_SAME_AS_CURRENT_MESSAGE);
+            throw new InvalidPasswordException(NEW_PASSWORD_SAME_AS_CURRENT_MESSAGE);
         }
 
         if (!changePasswordDto.getNewPassword().equals(changePasswordDto.getConfirmPassword())) {
-            throw new UserModificationException(PASSWORD_MISMATCH_CONFIRM_MESSAGE);
+            throw new PasswordMismatchException(PASSWORD_MISMATCH_CONFIRM_MESSAGE);
         }
     }
 
@@ -115,7 +111,7 @@ public class UserServiceImpl implements UserService {
     public User findUserById(Long userId) throws UserNotFoundException {
 //        return Optional.ofNullable(userRepository.findByUserId(userId))
 //                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
-        return userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
+        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, userId)));
     }
 
     @Override
