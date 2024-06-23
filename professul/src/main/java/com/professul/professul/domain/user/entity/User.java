@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.cglib.core.Local;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.Timestamp;
@@ -61,56 +60,48 @@ public class User {
             throw new IllegalArgumentException("Name cannot be null or empty");
         }
         this.name=newName;
-        this.editDate=new Timestamp(System.currentTimeMillis());
+        updateEditDate();
         log.info("User name changed to {}", newName);
 
     }
 
     //비밀번호 변경 메서드
     public void changePassword(String newPassword, PasswordEncoder passwordEncoder){
-        if (newPassword == null || newPassword.isEmpty()) {
-            throw new IllegalArgumentException("New password cannot be null or empty");
-        }
+        validateNotEmpty(newPassword,"새 비밀번호는 null이나 empty 안됨");
         this.password=passwordEncoder.encode(newPassword);
         log.info("User {} password changed", userId);
     }
 
     public void suspend(LocalDate until){
-        if (until == null || until.isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Suspend date must be in the future");
-        }
-        if (this.status != Status.ACTIVE) {
-            throw new IllegalStateException("Only active users can be suspended");
-        }
+        validateFutureDate(until);
+        validateStatus(Status.ACTIVE, "Only active users can be suspended");
         this.status=Status.SUSPENDED;
         this.suspendUntil=until;
         log.info("User {} suspended until {}", userId, until);
     }
 
     public void ban(String reason){
-        if (reason == null || reason.isEmpty()) {
-            throw new IllegalArgumentException("Ban reason cannot be null or empty");
-        }
+        validateNotEmpty(reason, "Ban reason cannot be null or empty");
         this.status=Status.BANNED;
         this.banReason=reason;
         log.info("User {} banned for reason: {}", userId, reason);
     }
 
     public void withdraw() {
-        if(this.status==Status.CANCELED){
-            throw new IllegalStateException("이미 탈퇴한 회원입니다");
-        }
+        validateStatusNot();
         this.status=Status.CANCELED;
         log.info("User {} withdrawn", userId);
     }
 
     public void activate() {
-        if (this.status != Status.SUSPENDED) {
-            throw new IllegalStateException("Only suspended users can be activated");
-        }
+        validateStatus(Status.SUSPENDED, "Only suspended users can be activated");
         this.status = Status.ACTIVE;
         this.suspendUntil = null;
         log.info("User {} activated", userId);
+    }
+
+    private void updateEditDate(){
+        this.editDate= new Timestamp(System.currentTimeMillis());
     }
 
     private void validateNotEmpty(String value, String errorMessage){
@@ -119,15 +110,21 @@ public class User {
         }
     }
 
-    private void validateFutureDate(LocalDate date, String errorMessage){
+    private void validateFutureDate(LocalDate date){
         if(date == null || date.isBefore(LocalDate.now())){
-            throw new IllegalArgumentException(errorMessage);
+            throw new IllegalArgumentException("suspend date must be in the future");
         }
     }
 
     private void validateStatus(Status reqstatus, String errorMessage){
         if(this.status!=reqstatus){
             throw new IllegalStateException(errorMessage);
+        }
+    }
+
+    private void validateStatusNot(){
+        if(this.status == Status.CANCELED){
+            throw new IllegalStateException("이미 탈퇴한 회원입니다");
         }
     }
 
